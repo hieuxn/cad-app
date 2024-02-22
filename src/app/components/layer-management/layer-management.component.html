@@ -1,13 +1,17 @@
 <div id="div">
     <div>
         <input #layerName type="text" placeholder="Layer Name">
-        <button (click)="addLayer(layerName.value)">Add Layer</button>
+        <input #layerElevation type="number" placeholder="Layer Elevation">
+        <button (click)="addLayer(layerName.value, layerElevation.value)">Add Layer</button>
     </div>
-    <ul>
+    <ul id="bg">
         <li *ngFor="let layer of layers">
-            {{layer.name}}
+            layer:{{layer.name}} (elevation: {{layer.elevation}}m)
             <button (click)="toggleLayerVisibility(layer.id)">
                 {{layer.visible ? 'Hide' : 'Show'}}
+            </button>
+            <button (click)="setActiveLayer(layer.id)">
+                {{layer.active ? 'Active' : 'Set Active'}}
             </button>
         </li>
     </ul>

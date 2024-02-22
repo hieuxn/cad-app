@@ -20,8 +20,8 @@ export class LayerManagementComponent implements OnInit {
     this.refreshLayers();
   }
 
-  public addLayer(name: string): void {
-    this.layerService.addLayer(name);
+  public addLayer(name: string, elevation: string): void {
+    this.layerService.addLayer(name, +elevation);
     this.refreshLayers();
   }
 
@@ -32,5 +32,14 @@ export class LayerManagementComponent implements OnInit {
 
   private refreshLayers(): void {
     this.layers = this.layerService.getLayers();
+  }
+
+  public setActiveLayer(layerId: number): void {
+    this.layers.forEach(layer => layer.active = false);
+    const activeLayer = this.layers.find(layer => layer.id === layerId);
+    if (activeLayer) {
+      activeLayer.active = true;
+      this.layerService.activeLayer = activeLayer;
+    }
   }
 }

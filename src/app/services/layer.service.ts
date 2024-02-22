@@ -1,15 +1,21 @@
 import { Injectable } from '@angular/core';
 import { Layer } from '../models/layer.model';
+import { ThreeDService } from './three-d.service';
 
 @Injectable({ providedIn: 'root' })
 export class LayerService {
 	private layers: Layer[] = [];
 	private idCounter: number = 0;
+	public activeLayer: Layer | null = null;
 
-	public constructor() { }
+	public constructor(private threeDService: ThreeDService) {
+		this.addLayer('default', 0.0);
+		this.layers[0].active = true;
+		this.activeLayer = this.layers[0];
+	}
 
-	public addLayer(name: string): void {
-		const layer = new Layer(this.idCounter++, name);
+	public addLayer(name: string, elevation: number): void {
+		const layer = new Layer(this.threeDService, this.idCounter++, name, elevation);
 		this.layers.push(layer);
 	}
 
@@ -24,7 +30,7 @@ export class LayerService {
 	public toggleLayerVisibility(id: number): void {
 		const layer = this.layers.find(layer => layer.id === id);
 		if (layer) {
-			layer.visible = !layer.visible;
+			layer.setVisibility(!layer.visible);
 		}
 	}
 }

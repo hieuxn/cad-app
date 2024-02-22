@@ -14,6 +14,7 @@ export class ThreeDService {
 
   public init(threeContainer: ElementRef): void {
     this.scene = new Scene();
+    // this.scene.background = new Color(0x888888);
 
     this.renderer = new WebGLRenderer();
     const container = threeContainer.nativeElement;
@@ -22,8 +23,8 @@ export class ThreeDService {
     window.addEventListener('resize', () => this.onWindowResize(threeContainer));
 
     this.camera = new PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
-    this.camera.position.y = -5;
-    this.camera.position.z = 1;
+    // this.camera.position.y = -5;
+    this.camera.position.z = 10;
 
     this.initControl();
     this.initGrid();
@@ -32,14 +33,15 @@ export class ThreeDService {
 
   private initControl() {
     this.controls = new MapControls(this.camera, this.renderer.domElement);
-    // this.controls.enableDamping = true;
-    // this.controls.dampingFactor = 0.05;
+    this.controls.enableDamping = true;
+    this.controls.dampingFactor = 0.05;
 
     this.controls.screenSpacePanning = true;
+    this.controls.maxPolarAngle = 2 * Math.PI;
     this.controls.minDistance = 0;
     this.controls.maxDistance = 100;
-    this.controls.maxPolarAngle = Math.PI;
     this.controls.zoomToCursor = true;
+    // this.controls.enableRotate = false;
   }
 
   private initGrid() {
@@ -47,6 +49,7 @@ export class ThreeDService {
     const divisions: number = 50;
     const gridHelper = new GridHelper(size, divisions);
     gridHelper.rotation.x = Math.PI / 2;
+    gridHelper.position.z = -0.1;
     this.scene.add(gridHelper);
 
     const axesHelper = new AxesHelper(1);
