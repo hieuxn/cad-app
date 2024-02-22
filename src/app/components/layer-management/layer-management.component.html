@@ -1,0 +1,14 @@
+<div id="div">
+    <div>
+        <input #layerName type="text" placeholder="Layer Name">
+        <button (click)="addLayer(layerName.value)">Add Layer</button>
+    </div>
+    <ul>
+        <li *ngFor="let layer of layers">
+            {{layer.name}}
+            <button (click)="toggleLayerVisibility(layer.id)">
+                {{layer.visible ? 'Hide' : 'Show'}}
+            </button>
+        </li>
+    </ul>
+</div>
