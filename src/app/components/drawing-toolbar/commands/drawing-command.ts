@@ -4,7 +4,7 @@ import { Object3D, Plane, Raycaster, Vector2, Vector3 } from 'three';
 import { Layer } from '../../../models/layer.model';
 import { ContextMenuService, ContextMenuWrapper } from '../../../services/context-menu.service';
 import { MouseService, SINGLETON_MOUSE_SERVICE_TOKEN } from '../../../services/mouse.service';
-import { ThreeDService } from '../../../services/three-d.service';
+import { ViewerService } from '../../../services/viewer.serive';
 import { ContextMenuCommandBase } from '../../context-menu/commands/context-menu-command-base';
 
 @Injectable({ providedIn: "root" })
@@ -22,7 +22,7 @@ export abstract class DrawingCommand {
   constructor(
     @Inject(SINGLETON_MOUSE_SERVICE_TOKEN) private mouseService: MouseService,
     contextMenuService: ContextMenuService,
-    private threeDService: ThreeDService,
+    private viewerService: ViewerService,
   ) {
     this.contextMenuWrapper ??= contextMenuService.lazyGet();
     this.onInit();
@@ -121,7 +121,7 @@ export abstract class DrawingCommand {
     const mouse = new Vector2();
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-    this.raycaster.setFromCamera(mouse, this.threeDService.camera);
+    this.raycaster.setFromCamera(mouse, this.viewerService.camera);
     const pointerPosition = new Vector3();
     this.raycaster.ray.intersectPlane(this.plane, pointerPosition);
     if (!pointerPosition) return null;

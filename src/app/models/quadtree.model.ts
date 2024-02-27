@@ -1,21 +1,25 @@
 import { Box2, Vector2 } from 'three';
 
 export class QuadTree {
-  boundary: Box2;
-  capacity: number;
-  points: Vector2[];
-  divided: boolean;
+  private boundary: Box2;
+  private capacity: number;
+  private points: Vector2[];
+  private divided: boolean;
+  private tolerance: number;
+  private toleranceSquared: number;
 
-  northeast: QuadTree | null = null;
-  northwest: QuadTree | null = null;
-  southeast: QuadTree | null = null;
-  southwest: QuadTree | null = null;
+  private northeast: QuadTree | null = null;
+  private northwest: QuadTree | null = null;
+  private southeast: QuadTree | null = null;
+  private southwest: QuadTree | null = null;
 
-  public constructor(boundary: Box2, capacity: number) {
+  public constructor(boundary: Box2, capacity: number, tolerance: number) {
     this.boundary = boundary;
     this.capacity = capacity;
     this.points = [];
     this.divided = false;
+    this.tolerance = tolerance;
+    this.toleranceSquared = tolerance * tolerance;
   }
 
   public insert(point: Vector2): boolean {
@@ -50,10 +54,10 @@ export class QuadTree {
     let se = new Box2(this.boundary.min, center);
     let sw = new Box2(new Vector2(center.x, this.boundary.min.y), new Vector2(this.boundary.max.x, center.y))
 
-    this.northeast = new QuadTree(ne, this.capacity);
-    this.northwest = new QuadTree(nw, this.capacity);
-    this.southeast = new QuadTree(se, this.capacity);
-    this.southwest = new QuadTree(sw, this.capacity);
+    this.northeast = new QuadTree(ne, this.capacity, this.tolerance);
+    this.northwest = new QuadTree(nw, this.capacity, this.tolerance);
+    this.southeast = new QuadTree(se, this.capacity, this.tolerance);
+    this.southwest = new QuadTree(sw, this.capacity, this.tolerance);
 
     this.divided = true;
   }
@@ -86,7 +90,7 @@ export class QuadTree {
       return false;
     }
 
-    const index = this.points.findIndex(p => p.x === point.x && p.y === point.y);
+    const index = this.points.findIndex(p => p.distanceToSquared(point) < this.toleranceSquared);
     if (index !== -1) {
       this.points.splice(index, 1);
       return true;

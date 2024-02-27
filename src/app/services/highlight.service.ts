@@ -1,13 +1,13 @@
 import { Injectable } from "@angular/core";
 import { CircleGeometry, Mesh, MeshBasicMaterial, Vector2, Vector3 } from "three";
-import { ThreeDService } from "./three-d.service";
+import { ViewerService } from "./viewer.serive";
 
 @Injectable({ providedIn: 'root' })
 export class HighLightService {
   private boxes: Mesh[] = [];
   public readonly distance: number = 0.3;
 
-  constructor(private threeDService: ThreeDService) { }
+  constructor(private viewerService: ViewerService) { }
 
   private createHighlightBox(position: Vector3, size: Vector2): Mesh {
     const geometry = new CircleGeometry(this.distance, 6);
@@ -23,7 +23,7 @@ export class HighLightService {
   }
 
   public clearHighlight() {
-    this.threeDService.scene.remove(...this.boxes);
+    this.viewerService.scene.remove(...this.boxes);
     this.boxes.length = 0;
   }
 
@@ -37,7 +37,7 @@ export class HighLightService {
   public highlightPoint(point: Vector2, elevation: number) {
     const size = new Vector2(this.distance, this.distance);
     const highlightBox = this.createHighlightBox(new Vector3(point.x, point.y, elevation), size);
-    this.threeDService.scene.add(highlightBox);
+    this.viewerService.scene.add(highlightBox);
     this.boxes.push(highlightBox);
   }
 }
