@@ -1,18 +1,18 @@
-<div id="div">
-    <div>
-        <input #layerName type="text" placeholder="Layer Name">
-        <input #layerElevation type="number" placeholder="Layer Elevation">
-        <button (click)="addLayer(layerName.value, layerElevation.value)">Add Layer</button>
-    </div>
-    <ul id="bg">
-        <li *ngFor="let layer of layers">
-            layer:{{layer.name}} (elevation: {{layer.elevation}}m)
-            <button (click)="toggleLayerVisibility(layer.id)">
-                {{layer.visible ? 'Hide' : 'Show'}}
-            </button>
-            <button (click)="setActiveLayer(layer.id)">
-                {{layer.active ? 'Active' : 'Set Active'}}
-            </button>
-        </li>
-    </ul>
+<div>
+	<div>
+		<input #layerName type="text" placeholder="Layer Name">
+		<input #layerElevation type="number" placeholder="Layer Elevation">
+		<button mat-flat-button (click)="addLayer(layerName.value, layerElevation.value)">Add Layer</button>
+	</div>
+	<ul id="bg">
+		<li *ngFor="let layer of layers">
+			<button mat-flat-button [color]="layer.visible ? 'basic': 'primary'" (click)="toggleLayerVisibility(layer.id)">
+				{{layer.visible ? 'Hide' : 'Show'}}
+			</button>
+			<button mat-flat-button [color]="layer.active ? 'primary' : 'basic'" (click)="setActiveLayer(layer.id)">
+				{{layer.active ? 'Active' : 'Set Active'}}
+			</button>
+			{{layer.name}} (z: {{layer.elevation}}m)
+		</li>
+	</ul>
 </div>

@@ -1,20 +1,14 @@
 .grid-toggle-button {
   position: absolute;
-  top: 25%;
+  top: 20%;
   right: 1%;
   width: 50px;
   height: 50px;
-  background-color: #333;
-  border-radius: 50%;
-  color: white;
-  border: none;
   cursor: pointer;
-  outline: none;
 }
 
-.grid-toggle-button:hover {
-  background-color: #555;
-}
+// .grid-toggle-button:hover {
+// }
 
 .grid-icon {
   display: block;
@@ -25,7 +19,7 @@
 
 #viewNavigator {
   position: absolute;
-  top: 5%;
+  top: 1%;
   right: 1%;
   width: 10%;
   height: 20%;

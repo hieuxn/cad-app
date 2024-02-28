@@ -1,45 +1,48 @@
 import { NgFor } from '@angular/common';
-import { Component, Injectable, OnInit } from '@angular/core';
-import { Layer } from '../../models/layer.model';
+import { AfterViewInit, Component } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { ManagedLayer } from '../../models/layer.model';
 import { LayerService } from '../../services/layer.service';
 
-@Injectable({ providedIn: 'root' })
 @Component({
   selector: 'app-layer-management',
   standalone: true,
-  imports: [NgFor],
+  imports: [NgFor, MatButtonModule],
   templateUrl: './layer-management.component.html',
   styleUrls: ['./layer-management.component.scss']
 })
-export class LayerManagementComponent implements OnInit {
-  public layers: Layer[] = [];
+export class LayerManagementComponent implements AfterViewInit {
+  public layers: ManagedLayer[] = [];
 
-  public constructor(private layerService: LayerService) { }
+  public constructor(private layerService: LayerService, private snackBar: MatSnackBar) {
+    this.layers = layerService.layers;
+  }
+  public ngAfterViewInit(): void {
+    this.layerService.addLayer('default', 0.0);
+    this.setActiveLayer(1);
+  }
 
   public ngOnInit(): void {
-    this.refreshLayers();
   }
 
   public addLayer(name: string, elevation: string): void {
+    if (!name || !elevation) {
+      this.snackBar.open('The name or elevation field is empty', 'Close', { duration: 3000 });
+      return;
+    }
+    if (this.layers.find(layer => layer.elevation == +elevation)) {
+      this.snackBar.open('Each layer must have a unique elevation', 'Close', { duration: 3000 });
+      return;
+    }
     this.layerService.addLayer(name, +elevation);
-    this.refreshLayers();
   }
 
   public toggleLayerVisibility(id: number): void {
     this.layerService.toggleLayerVisibility(id);
-    this.refreshLayers();
-  }
-
-  private refreshLayers(): void {
-    this.layers = this.layerService.getLayers();
   }
 
   public setActiveLayer(layerId: number): void {
-    this.layers.forEach(layer => layer.active = false);
-    const activeLayer = this.layers.find(layer => layer.id === layerId);
-    if (activeLayer) {
-      activeLayer.active = true;
-      this.layerService.activeLayer = activeLayer;
-    }
+    this.layerService.setActiveLayer(layerId);
   }
 }

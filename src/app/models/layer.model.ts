@@ -1,45 +1,56 @@
-import { Line, Object3D } from 'three';
+import { Layers, Line, Object3D } from 'three';
 import { ViewerService } from '../services/viewer.serive';
 import { ObjectSnapping } from './object-snapping.model';
 
-export class Layer {
+export class ManagedLayer {
 	public id: number;
 	public name: string;
-	public visible: boolean;
 	public elevation: number;
 	public active: boolean = false;
-	private objects: Object3D[] = [];
+	public visible: boolean = true;
 	public snapping: ObjectSnapping = new ObjectSnapping();
+	private objects: Map<string, Object3D> = new Map<string, Object3D>();
+	private layers!: Layers;
 
-	constructor(private viewerService: ViewerService, id: number, name: string, elevation: number, visible: boolean = true) {
+	constructor(private viewerService: ViewerService, id: number, name: string, elevation: number) {
 		this.id = id;
 		this.name = name;
 		this.elevation = elevation;
-		this.visible = visible;
+		this.layers = viewerService.view3D.activeCamera.layers;
 	}
 
 	public addObjects(...objects: Object3D[]): void {
 		for (const item of objects) {
-			this.objects.push(item);
-			this.viewerService.scene.add(item);
+			item.layers.set(this.id);
+			if (this.objects.get(item.uuid)) throw new Error("Duplicated uuid");
+			this.objects.set(item.uuid, item);
+			this.viewerService.view3D.scene.add(item);
+
+			// TODO: Improve code
 			if (item instanceof Line) {
 				this.snapping.insertLine(item);
 			}
 		}
 	}
 
-	public removeLastObjects(...objects: Object3D[]): void {
-		this.viewerService.scene.remove(...objects);
+	public removeObjects(...objects: Object3D[]): void {
+		this.viewerService.view3D.scene.remove(...objects);
 		for (const item of objects) {
+			// TODO: improve code
 			if (item instanceof Line) {
 				this.snapping.removeLine(item);
 			}
+			this.objects.delete(item.uuid);
 		}
-		this.objects.length = this.objects.length - objects.length;
 	}
 
-	public setVisibility(visible: boolean): void {
-		this.visible = visible;
-		this.objects.forEach(object => object.visible = visible);
+	public toggleVisibility(): void {
+		if (this.layers.isEnabled(this.id)) {
+			this.visible = false;
+			this.layers.disable(this.id);
+		} else {
+			this.visible = true;
+			this.layers.enable(this.id);
+		}
 	}
 }

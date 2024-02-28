@@ -1,10 +1,11 @@
-import { AfterViewInit, Component, ElementRef, Injectable, ViewChild } from '@angular/core';
-import { AxesHelper, Camera, Clock, GridHelper, OrthographicCamera, PerspectiveCamera, Scene, WebGLRenderer } from 'three';
+import { AfterViewInit, Component, ElementRef, OnDestroy, ViewChild } from '@angular/core';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { AxesHelper, Camera, Clock, GridHelper, OrthographicCamera, PerspectiveCamera, Scene, Vector2, Vector3, WebGLRenderer } from 'three';
 import { MapControls } from 'three/examples/jsm/controls/MapControls.js';
+import { LayerService } from '../../../services/layer.service';
 
 export type result = 'add' | 'get'
 
-@Injectable({ providedIn: 'root' })
 @Component({
   selector: 'app-view-three-d',
   standalone: true,
@@ -12,15 +13,19 @@ export type result = 'add' | 'get'
   templateUrl: './view-three-d.component.html',
   styleUrl: './view-three-d.component.scss'
 })
-export class ViewThreeDComponent implements AfterViewInit {
+export class ViewThreeDComponent implements AfterViewInit, OnDestroy {
   @ViewChild('container') private container!: ElementRef;
   private controlsMap: Map<string, MapControls> = new Map<string, MapControls>();
   private perspectiveCamera!: PerspectiveCamera;
-  private orthogonalCamera!: OrthographicCamera;
+  private orthographicCamera!: OrthographicCamera;
   private clock: Clock = new Clock();
   public scene!: Scene;
   public activeCamera!: Camera;
   public renderer!: WebGLRenderer;
+
+  public constructor(private snackBar: MatSnackBar, private layerService: LayerService) { }
+  ngOnDestroy(): void {
+  }
 
   public get controls(): MapControls | null {
     return this.controlsMap.get(this.activeCamera.type) || null;
@@ -31,21 +36,39 @@ export class ViewThreeDComponent implements AfterViewInit {
   }
 
   public switchCamera(): result {
-    if (this.activeCamera === this.orthogonalCamera) {
+    if (this.activeCamera === this.orthographicCamera) {
       this.activeCamera = this.perspectiveCamera;
+      this.snackBar.open('Switched to Perspective Camera', 'OK', { duration: 1000 });
     } else {
-      this.activeCamera = this.orthogonalCamera;
+      this.activeCamera = this.orthographicCamera;
+      this.snackBar.open('Switched to Orthographic Camera', 'OK', { duration: 1000 });
     }
 
     if (this.activeCamera === this.perspectiveCamera) {
       this.activeCamera.position.set(0, -10, 5);
     }
     else {
-      this.activeCamera.position.z = 10;
+      this.activeCamera.position.set(0, 0, 10);
     }
     return this.initControl(this.activeCamera.type);
   }
 
+  public resetPosition() {
+    this.controlsMap.forEach(item => {
+      item.reset();
+    });
+
+    if (this.activeCamera === this.perspectiveCamera) {
+      this.activeCamera.position.set(0, -10, 5);
+    }
+    else {
+      this.activeCamera.position.set(0, 0, 10);
+    }
+
+    this.controlsMap.forEach(item => {
+      item.update();
+    });
+  }
 
   public init(threeContainer: ElementRef): void {
     this.scene = new Scene();
@@ -59,8 +82,13 @@ export class ViewThreeDComponent implements AfterViewInit {
     const width = container.clientWidth;
     const height = container.clientHeight;
     this.perspectiveCamera = new PerspectiveCamera(75, width / height, 0.1, 1000);
+
     const scale = 2 * 64;
-    this.orthogonalCamera = new OrthographicCamera(-width / scale, width / scale, height / scale, -height / scale, 0.1, 1000);
+    this.orthographicCamera = new OrthographicCamera(-width / scale, width / scale, height / scale, -height / scale, 0.1, 1000);
+
+    // Sync layers
+    this.perspectiveCamera.layers = this.orthographicCamera.layers;
+
     this.switchCamera();
 
     this.initGrid();
@@ -70,11 +98,13 @@ export class ViewThreeDComponent implements AfterViewInit {
   private initControl(cameraType: string): result {
     if (!this.controlsMap.get(cameraType)) {
       const controls = new MapControls(this.activeCamera, this.renderer.domElement);
-      controls.enableDamping = true;
+      controls.enableDamping = false;
       controls.dampingFactor = 0.75;
-      controls.zoomToCursor = true;
-      controls.zoomSpeed = 5;
-      controls.screenSpacePanning = false;
+      controls.screenSpacePanning = true;
+      controls.minDistance = -Infinity;
+      if (cameraType === OrthographicCamera.name) {
+        controls.enableRotate = false;
+      }
       this.controlsMap.set(cameraType, controls);
       return 'add';
     }
@@ -86,7 +116,7 @@ export class ViewThreeDComponent implements AfterViewInit {
     const divisions: number = 50;
     const gridHelper = new GridHelper(size, divisions);
     gridHelper.rotation.x = Math.PI / 2;
-    gridHelper.position.z = -0.1;
+    // gridHelper.position.z = 0;
     this.scene.add(gridHelper);
 
     const axesHelper = new AxesHelper(1);
@@ -104,7 +134,28 @@ export class ViewThreeDComponent implements AfterViewInit {
   private animate(): void {
     requestAnimationFrame(() => this.animate());
     const delta = this.clock.getDelta();
+    // if (!this.timeoutRef) {
     this.controlsMap.forEach(kvp => kvp.update(delta));
+    // }
     this.renderer.render(this.scene, this.activeCamera);
+  }
+
+  public ConvertMousePositionToWorldSpace(mouseNDC: Vector2): Vector3 {
+    const z = this.layerService.activeLayer?.elevation ?? 0;
+    if (this.activeCamera === this.orthographicCamera) {
+      const tempZ = (this.orthographicCamera.near + this.orthographicCamera.far) / (this.orthographicCamera.near - this.orthographicCamera.far);
+      const pos = new Vector3(mouseNDC.x, mouseNDC.y, tempZ);
+      pos.applyMatrix4(this.orthographicCamera.projectionMatrixInverse).add(this.orthographicCamera.position);
+      pos.z = z;
+      return pos;
+    } else {
+      const tempPos = new Vector3(mouseNDC.x, mouseNDC.y, 0.5);
+      tempPos.unproject(this.perspectiveCamera);
+      tempPos.sub(this.perspectiveCamera.position).normalize();
+      var distance = - this.perspectiveCamera.position.z / tempPos.z;
+      const position = new Vector3().copy(this.perspectiveCamera.position).add(tempPos.multiplyScalar(distance))
+      position.z = z;
+      return position;
+    }
   }
 }

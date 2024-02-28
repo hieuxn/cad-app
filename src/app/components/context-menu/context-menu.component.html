@@ -1,3 +1,4 @@
 <div [style.left]="x + 'px'" [style.top]="y + 'px'" class="context-menu" *ngIf="isVisible">
-    <div *ngFor="let command of commands" (click)="execute($event, command)">{{ command.name}}</div>
+    <div *ngFor="let command of commands" [style.display]="command.isVisible ? 'block' : 'none'"
+        (click)="execute($event, command)">{{ command.name}}</div>
 </div>

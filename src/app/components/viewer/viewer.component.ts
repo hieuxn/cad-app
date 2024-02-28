@@ -1,11 +1,10 @@
-import { AfterViewInit, Component, HostListener, Inject, Injectable, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, HostListener, Inject, OnInit, ViewChild } from '@angular/core';
 import { TitleSpacingPipe } from '../../pipes/title-spacing/title-spacing.pipe';
 import { MouseService, SINGLETON_MOUSE_SERVICE_TOKEN } from '../../services/mouse.service';
 import { ViewerService } from '../../services/viewer.serive';
 import { ViewNavigatorComponent } from './view-navigator/view-navigator.component';
 import { ViewThreeDComponent } from './view-three-d/view-three-d.component';
 
-@Injectable({ providedIn: 'root' })
 @Component({
   selector: 'app-viewer',
   standalone: true,

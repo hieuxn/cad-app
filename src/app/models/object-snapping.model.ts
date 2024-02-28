@@ -20,7 +20,7 @@ export class ObjectSnapping {
     }
   }
 
-  // TODO: improve logic
+  // TODO: improve code
   public removeLine(line: Line) {
     const positions = line.geometry.getAttribute('position');
     for (let i = 0; i < positions.count; i++) {

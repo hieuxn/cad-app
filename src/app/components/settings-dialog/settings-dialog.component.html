@@ -1,0 +1,21 @@
+<h2 mat-dialog-title>Settings</h2>
+<mat-dialog-content>
+  <div id="first-div">
+    <mat-label>Snap Precision</mat-label>
+    <mat-slider showTickMarks discrete min="0" max="6" [displayWith]="formatLabel">
+      <input matSliderThumb [(ngModel)]="settings[snapPrecision]">
+    </mat-slider>
+  </div>
+
+  <div>
+    <mat-label>Show decimal places</mat-label>
+    <mat-slider showTickMarks discrete min="0" max="6">
+      <input matSliderThumb [(ngModel)]="settings[decimalPlaces]">
+    </mat-slider>
+  </div>
+
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-flat-button mat-dialog-close>Cancel</button>
+  <button mat-flat-button color="primary" (click)="saveSettings()">Save</button>
+</mat-dialog-actions>

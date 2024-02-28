@@ -1,15 +1,15 @@
-import { AfterViewInit, Component, ElementRef, HostListener, Injectable, OnDestroy, ViewChild } from '@angular/core';
-import { AxesHelper, Camera, Clock, Object3D, OrthographicCamera, Raycaster, Scene, Spherical, Sprite, SpriteMaterial, Texture, Vector2, Vector3, WebGLRenderer } from 'three';
+import { AfterViewInit, Component, ElementRef, HostListener, OnDestroy, ViewChild } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
+import { AxesHelper, Camera, Clock, Object3D, OrthographicCamera, Raycaster, Scene, Sprite, SpriteMaterial, Texture, Vector2, Vector3, WebGLRenderer } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { ViewerService } from '../../../services/viewer.serive';
 
 export type axis = 'x' | 'y' | 'z';
 
-@Injectable({ providedIn: 'root' })
 @Component({
   selector: 'app-view-navigator',
   standalone: true,
-  imports: [],
+  imports: [MatButtonModule],
   templateUrl: './view-navigator.component.html',
   styleUrl: './view-navigator.component.scss'
 })
@@ -24,12 +24,12 @@ export class ViewNavigatorComponent implements AfterViewInit, OnDestroy {
   private raycaster: Raycaster = new Raycaster();
   private readonly directions: Map<string, Vector3> = new Map<string, Vector3>([
 
-    ['X', new Vector3(1, 0, 0)],
-    ['-X', new Vector3(-1, 0, 0)],
-    ['Y', new Vector3(0, 1, 0)],
-    ['-Y', new Vector3(0, -1, 0)],
-    ['Z', new Vector3(0, 0, 1)],
-    ['-Z', new Vector3(0, 0, -1)]
+    ['X', new Vector3(10, 0, 0)],
+    ['-X', new Vector3(-10, 0, 0)],
+    ['Y', new Vector3(0, 10, 0)],
+    ['-Y', new Vector3(0, -10, 0)],
+    ['Z', new Vector3(0, 0, 10)],
+    ['-Z', new Vector3(0, 0, -10)]
   ]);
 
   private _scene!: Scene;
@@ -42,13 +42,31 @@ export class ViewNavigatorComponent implements AfterViewInit, OnDestroy {
   public get scene(): Scene { return this._scene; }
   public get controls(): OrbitControls { return this._controls; }
   public get axesGroup(): Object3D { return this._axesGroup; }
+  public isOrthographicCamera = true;
+
+  private checkCamera() {
+    if (!this.viewService.view3D) this.isOrthographicCamera = true;
+    this.isOrthographicCamera = this.viewService.view3D.activeCamera.type == OrthographicCamera.name;;
+  };
 
   constructor(private viewService: ViewerService) {
-
   }
 
   public ngAfterViewInit(): void {
     this.init(this.viewNavigator)
+  }
+
+  public ngOnDestroy(): void {
+    if (this._renderer) {
+      this._renderer.dispose();
+    }
+  }
+
+  public resetPosition() {
+    this._axesGroup.position.set(0, 0, 0);
+    this._axesGroup.rotation.set(0, 0, 0);
+    this._controls.reset();
+    this._camera.position.set(0, 0, 10);
   }
 
   private init(container: ElementRef) {
@@ -58,7 +76,6 @@ export class ViewNavigatorComponent implements AfterViewInit, OnDestroy {
 
     const scale = 1.7;
     this._camera = new OrthographicCamera(-scale, scale, scale, -scale, 5, 1000);
-    this._camera.position.z = 10;
 
     this.width = nativeElement.clientWidth;
     this.height = nativeElement.clientHeight;
@@ -68,7 +85,7 @@ export class ViewNavigatorComponent implements AfterViewInit, OnDestroy {
     nativeElement.appendChild(this._renderer.domElement);
 
     this._controls = new OrbitControls(this.camera, this.renderer.domElement);
-    this._controls.enableDamping = true;
+    this._controls.enableDamping = false;
     this.controls.dampingFactor = 0.15;
     this._controls.enableZoom = false;
     this._controls.screenSpacePanning = false;
@@ -100,6 +117,7 @@ export class ViewNavigatorComponent implements AfterViewInit, OnDestroy {
 
     this._scene.add(this._axesGroup);
 
+    this.resetPosition()
     this.animate();
   }
 
@@ -146,18 +164,15 @@ export class ViewNavigatorComponent implements AfterViewInit, OnDestroy {
     this._renderer.render(this._scene, this._camera);
   }
 
-  public ngOnDestroy(): void {
-    if (this._renderer) {
-      this._renderer.dispose();
-    }
-  }
-
   public switchCamera(): void {
     this.viewService.switchCamera();
+    this.checkCamera();
   }
 
   @HostListener('mousedown', ['$event'])
   private onMouseDown(event: MouseEvent) {
+    this._controls.enableRotate = !this.isOrthographicCamera;
+    if (!this._controls.enableRotate) return;
     const mouse = new Vector2();
     mouse.x = (event.offsetX / this.width) * 2 - 1;
     mouse.y = -(event.offsetY / this.height) * 2 + 1;
@@ -169,17 +184,20 @@ export class ViewNavigatorComponent implements AfterViewInit, OnDestroy {
       if (!(label instanceof Sprite)) continue;
 
       const targetDirection = this.directions.get(label.name);
-      if (!targetDirection) continue;
+      if (targetDirection === undefined) continue;
 
       this.rotateCameraToDirection(targetDirection);
+      break;
     }
   }
 
   private rotateCameraToDirection(targetDirection: Vector3): void {
-    const spherical = new Spherical().setFromVector3(targetDirection);
-    spherical.radius = this.camera.position.length();
-    const newPosition = new Vector3().setFromSpherical(spherical);
-    this.camera.position.copy(newPosition);
-    this._axesGroup.lookAt(new Vector3());
+    this._axesGroup.rotation.set(0, 0, 0);
+    this._camera.position.copy(targetDirection);
+    this._camera.lookAt(new Vector3());
+    this.controls.update();
+    this.viewService.view3D.controls?.reset();
+    this.viewService.view3D.activeCamera.position.copy(this._camera.position);
+    this.viewService.view3D.controls?.update();
   }
 }

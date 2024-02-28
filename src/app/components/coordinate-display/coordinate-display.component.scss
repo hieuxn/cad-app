@@ -1,0 +1,10 @@
+.mouse-coordinates {
+  position: absolute;
+  color: white;
+  padding: 5px;
+  pointer-events: none;
+  transform: translate(-50%, -100%);
+  z-index: 100;
+  white-space: nowrap;
+  font-size: 12px;
+}

@@ -23,7 +23,7 @@ export class HighLightService {
   }
 
   public clearHighlight() {
-    this.viewerService.scene.remove(...this.boxes);
+    this.viewerService.view3D.scene.remove(...this.boxes);
     this.boxes.length = 0;
   }
 
@@ -37,7 +37,7 @@ export class HighLightService {
   public highlightPoint(point: Vector2, elevation: number) {
     const size = new Vector2(this.distance, this.distance);
     const highlightBox = this.createHighlightBox(new Vector3(point.x, point.y, elevation), size);
-    this.viewerService.scene.add(highlightBox);
+    this.viewerService.view3D.scene.add(highlightBox);
     this.boxes.push(highlightBox);
   }
 }

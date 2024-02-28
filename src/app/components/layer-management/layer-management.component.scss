@@ -1,9 +1,9 @@
-#div {
-  position: absolute;
-  top: 0;
-  right: 0;
+#bg {
+  color: white;
+  box-shadow: gba(0, 0, 0, 0.2);
 }
 
-#bg {
-  background-color: white;
+button {
+  margin: 2px;
+  height: 20px;
 }

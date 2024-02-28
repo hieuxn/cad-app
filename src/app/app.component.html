@@ -1,6 +1,10 @@
 <div>
   <app-viewer></app-viewer>
-  <app-layer-management></app-layer-management>
   <app-drawing-toolbar></app-drawing-toolbar>
   <app-context-menu #contextMenu></app-context-menu>
+  <app-coordinate-display></app-coordinate-display>
+</div>
+<div id="container">
+  <app-layer-management></app-layer-management>
+  <button mat-flat-button color="primary" (click)="openSettingsDialog()">Settings</button>
 </div>

@@ -5,9 +5,7 @@ export class ContextMenuWrapper {
     public value!: ContextMenuComponent;
 }
 
-@Injectable({
-    providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class ContextMenuService {
     private contextMenuWrapper: ContextMenuWrapper = new ContextMenuWrapper();
 

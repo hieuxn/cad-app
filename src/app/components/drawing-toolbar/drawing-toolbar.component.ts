@@ -1,4 +1,5 @@
 import { Component, Injector } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
 import { LayerService } from '../../services/layer.service';
 import { DrawingCommand } from './commands/drawing-command';
 import { DrawingPolyLineCommand } from './commands/drawing-polyline';
@@ -6,7 +7,7 @@ import { DrawingPolyLineCommand } from './commands/drawing-polyline';
 @Component({
   selector: 'app-drawing-toolbar',
   standalone: true,
-  imports: [],
+  imports: [MatButtonModule],
   templateUrl: './drawing-toolbar.component.html',
   styleUrl: './drawing-toolbar.component.scss'
 })
