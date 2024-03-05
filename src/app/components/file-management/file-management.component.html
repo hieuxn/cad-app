@@ -1,0 +1,8 @@
+<button mat-raised-button color="accent" (click)="fileInput.click()">
+  Choose File
+</button>
+<input type="file" #fileInput hidden (change)="handleFileInput($event)"> 
+
+<button mat-raised-button color="primary" (click)="export()">
+  Export File
+</button>

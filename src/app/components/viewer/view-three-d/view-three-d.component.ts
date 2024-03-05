@@ -1,6 +1,6 @@
 import { AfterViewInit, Component, ElementRef, OnDestroy, ViewChild } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { AxesHelper, Camera, Clock, GridHelper, OrthographicCamera, PerspectiveCamera, Scene, Vector2, Vector3, WebGLRenderer } from 'three';
+import { AxesHelper, Camera, Clock, OrthographicCamera, PerspectiveCamera, Scene, Vector2, Vector3, WebGLRenderer } from 'three';
 import { MapControls } from 'three/examples/jsm/controls/MapControls.js';
 import { LayerService } from '../../../services/layer.service';
 
@@ -72,6 +72,7 @@ export class ViewThreeDComponent implements AfterViewInit, OnDestroy {
 
   public init(threeContainer: ElementRef): void {
     this.scene = new Scene();
+    // this.scene.background = new Color(0xEEEEEE);
 
     this.renderer = new WebGLRenderer();
     const container = threeContainer.nativeElement;
@@ -114,10 +115,10 @@ export class ViewThreeDComponent implements AfterViewInit, OnDestroy {
   private initGrid() {
     const size: number = 50;
     const divisions: number = 50;
-    const gridHelper = new GridHelper(size, divisions);
-    gridHelper.rotation.x = Math.PI / 2;
+    // const gridHelper = new GridHelper(size, divisions);
+    // gridHelper.rotation.x = Math.PI / 2;
     // gridHelper.position.z = 0;
-    this.scene.add(gridHelper);
+    // this.scene.add(gridHelper);
 
     const axesHelper = new AxesHelper(1);
     this.scene.add(axesHelper);

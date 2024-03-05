@@ -4,6 +4,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { ContextMenuComponent } from './components/context-menu/context-menu.component';
 import { CoordinateDisplayComponent } from './components/coordinate-display/coordinate-display.component';
 import { DrawingToolbarComponent } from './components/drawing-toolbar/drawing-toolbar.component';
+import { FileManagementComponent } from './components/file-management/file-management.component';
 import { LayerManagementComponent } from './components/layer-management/layer-management.component';
 import { SettingsDialogComponent } from './components/settings-dialog/settings-dialog.component';
 import { ViewerComponent } from './components/viewer/viewer.component';
@@ -12,7 +13,8 @@ import { ContextMenuService } from './services/context-menu.service';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CoordinateDisplayComponent, ViewerComponent, LayerManagementComponent, DrawingToolbarComponent, ContextMenuComponent, MatButtonModule],
+  imports: [CoordinateDisplayComponent, ViewerComponent, LayerManagementComponent, DrawingToolbarComponent,
+    ContextMenuComponent, MatButtonModule, FileManagementComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
