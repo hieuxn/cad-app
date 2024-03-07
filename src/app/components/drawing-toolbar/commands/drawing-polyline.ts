@@ -1,16 +1,16 @@
-import { Injectable } from "@angular/core";
-import { BufferGeometry, Line, LineBasicMaterial, Object3D, Vector3 } from "three";
+import { BufferGeometry, Group, Line, LineBasicMaterial, Object3D, Vector3 } from "three";
 import { ManagedLayer } from "../../../models/layer.model";
 import { ContextMenuCommandBase } from "../../context-menu/commands/context-menu-command-base";
 import { ContextMenuGenericCommand } from "../../context-menu/commands/context-menu-generic-command";
 import { DrawingCommand } from "./drawing-command";
 
-@Injectable({ providedIn: 'root' })
 export class DrawingPolyLineCommand extends DrawingCommand {
   public override name: string = "Draw Polyline";
   private isDrawingFinished: boolean = false;
   private forceFinish: boolean = false;
   private finishCommand!: ContextMenuCommandBase;
+  public color: number = 0x00FFFF;
+  public userData: Record<string, string> = {};
 
   protected override onInit() {
     this.finishCommand = ContextMenuGenericCommand.Create('Finish Polyline', (_) => {
@@ -42,9 +42,13 @@ export class DrawingPolyLineCommand extends DrawingCommand {
 
   protected override drawShapeImplementation(mouseLocations: Vector3[]): Object3D[] | null {
     const geometry = new BufferGeometry().setFromPoints(mouseLocations);
-    const material = new LineBasicMaterial({ color: 0x00ffff });
+    const material = new LineBasicMaterial({ color: this.color });
     const line = new Line(geometry, material);
-    return [line];
+    line.userData = this.userData;
+    const group = new Group();
+    group.children.push(line);
+    group.name = this.userData['blockName'];
+    return [group];
   }
 
   protected override onMenuContextOpen(mouseEvent: MouseEvent): void {

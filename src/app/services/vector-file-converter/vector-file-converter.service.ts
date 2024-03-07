@@ -1,13 +1,13 @@
-import { Injectable, inject } from "@angular/core";
+import { Injectable } from "@angular/core";
 import { Object3D } from "three";
-import { DXFConverterService } from "./services/dxf-converter/dxf-converter.service";
-import { FileConverterBase } from "./services/file-converter-base.service";
+import { BaseConverter } from "./base-converter.service";
+import { DXFConverter } from "./dxf-converter/dxf.converter";
 
 @Injectable({ providedIn: 'root' })
 export class VectorFileConveterService {
 
-  private handlers = new Map<string, FileConverterBase>([
-    ['dxf', inject(DXFConverterService)]
+  private handlers = new Map<string, BaseConverter>([
+    ['dxf', new DXFConverter()]
   ]);
 
   public async handleFileInput(event: Event): Promise<Object3D[] | null> {

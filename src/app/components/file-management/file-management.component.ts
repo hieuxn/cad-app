@@ -32,7 +32,7 @@ export class FileManagementComponent {
   }
 
   public async export() {
-    const objects = this.viewerService.view3D.scene.children.slice(2);
+    const objects = this.viewerService.view3D.scene.children.slice(1);
     const file = await this.converterService.exportToFile(objects, 'dxf');
     if (null === file) return;
     const blob = new Blob([await file.text()], { type: 'application/octet-stream' });

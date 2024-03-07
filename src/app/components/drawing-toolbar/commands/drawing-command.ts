@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@angular/core';
+import { Injector } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { Box2, Object3D, Plane, Raycaster, Vector2, Vector3 } from 'three';
 import { ManagedLayer } from '../../../models/layer.model';
@@ -10,7 +10,6 @@ import { ViewerService } from '../../../services/viewer.serive';
 import { ContextMenuCommandBase } from '../../context-menu/commands/context-menu-command-base';
 import { ContextMenuGenericCommand } from '../../context-menu/commands/context-menu-generic-command';
 
-@Injectable({ providedIn: "root" })
 export abstract class DrawingCommand {
   public abstract name: string;
   protected drawOnMouseDown: boolean = true;
@@ -21,14 +20,17 @@ export abstract class DrawingCommand {
   protected contextMenuCommmands: ContextMenuCommandBase[] = [];
   private object3Ds: Object3D[] | null = [];
   private mouseUpCount: number = 0;
+  private viewerService: ViewerService;
+  private coordinateService: CoordinateService;
+  private highlightService: HighLightService;
+  private mouseService: MouseService;
 
-  constructor(
-    @Inject(SINGLETON_MOUSE_SERVICE_TOKEN) private mouseService: MouseService,
-    contextMenuService: ContextMenuService,
-    private viewerService: ViewerService,
-    private coordinateService: CoordinateService,
-    private highlightService: HighLightService
-  ) {
+  constructor(injector: Injector) {
+    this.viewerService = injector.get(ViewerService);
+    this.coordinateService = injector.get(CoordinateService);
+    this.highlightService = injector.get(HighLightService);
+    this.mouseService = injector.get(SINGLETON_MOUSE_SERVICE_TOKEN);
+    const contextMenuService = injector.get(ContextMenuService);
     this.contextMenuWrapper ??= contextMenuService.lazyGet();
     this.onInit();
   }

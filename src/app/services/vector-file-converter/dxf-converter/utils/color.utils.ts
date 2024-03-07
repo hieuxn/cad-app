@@ -1,7 +1,5 @@
-import { Injectable } from "@angular/core";
 
-@Injectable({ providedIn: 'root' })
-export class ColorConverter {
+export class ColorUtils {
   private static colorNumberToHex: Record<number, number> = {
     0: 0x000000,
     1: 0xFF0000,
@@ -264,19 +262,54 @@ export class ColorConverter {
   private static hexToColorNumber: Record<number, number>;
 
   constructor() {
-    ColorConverter.hexToColorNumber ??= Object.keys(ColorConverter.colorNumberToHex)
+    ColorUtils.hexToColorNumber ??= Object.keys(ColorUtils.colorNumberToHex)
       .reduce((acc, key) => {
-        const hexValue = ColorConverter.colorNumberToHex[parseInt(key)];
+        const hexValue = ColorUtils.colorNumberToHex[parseInt(key)];
         acc[hexValue] = parseInt(key);
         return acc;
       }, {} as Record<number, number>);
   }
 
   public getColorByNumber(colorNumber: number): number {
-    return ColorConverter.colorNumberToHex[colorNumber] ?? 0xFFFFFF;
+    const color = ColorUtils.colorNumberToHex[colorNumber];
+    if (color) return color;
+    return 0xFFFFFF;
   }
 
   public getNumberByColor(hexColor: number): number {
-    return ColorConverter.hexToColorNumber[hexColor] ?? -1;
+    let number = ColorUtils.hexToColorNumber[hexColor];
+    if (number) return number;
+
+    let nearestColorKey: number = -1;
+    let smallestDifference: number = Number.MAX_VALUE;
+
+    Object.keys(ColorUtils.colorNumberToHex).forEach(key => {
+      const colorHex = ColorUtils.colorNumberToHex[parseInt(key)];
+      const difference = ColorUtils.colorDifference(hexColor, colorHex);
+      if (difference < smallestDifference) {
+        smallestDifference = difference;
+        nearestColorKey = parseInt(key);
+      }
+    });
+
+    if (nearestColorKey != -1) {
+      ColorUtils.hexToColorNumber[hexColor] = nearestColorKey;
+      return nearestColorKey;
+    }
+
+    return 255;
+  }
+
+  private static colorDifference(hexColor1: number, hexColor2: number): number {
+    const r1 = (hexColor1 >> 16) & 0xFF;
+    const g1 = (hexColor1 >> 8) & 0xFF;
+    const b1 = hexColor1 & 0xFF;
+
+    const r2 = (hexColor2 >> 16) & 0xFF;
+    const g2 = (hexColor2 >> 8) & 0xFF;
+    const b2 = hexColor2 & 0xFF;
+
+    // Euclidean distance in RGB space
+    return Math.pow(r2 - r1, 2) + Math.pow(g2 - g1, 2) + Math.pow(b2 - b1, 2);
   }
 }
