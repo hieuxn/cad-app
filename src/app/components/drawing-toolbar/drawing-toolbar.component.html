@@ -1,7 +1,0 @@
-<div class="toolbar">
-  @for (command of commands; track command.name) {
-  <button mat-flat-button color="primary" (click)="this.execute(command)">{{command.name}}</button>
-  } @empty {
-  Empty list of commands
-  }
-</div>

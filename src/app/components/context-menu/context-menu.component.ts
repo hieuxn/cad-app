@@ -1,6 +1,7 @@
 import { NgFor, NgIf } from '@angular/common';
-import { Component, HostListener, NgZone } from '@angular/core';
+import { AfterViewInit, Component, HostListener } from '@angular/core';
 import { Subject, Subscription, debounceTime } from 'rxjs';
+import { ContextMenuService } from '../../services/context-menu.service';
 import { ContextMenuCommandBase } from './commands/context-menu-command-base';
 
 @Component({
@@ -10,20 +11,25 @@ import { ContextMenuCommandBase } from './commands/context-menu-command-base';
   templateUrl: './context-menu.component.html',
   styleUrl: './context-menu.component.scss'
 })
-export class ContextMenuComponent {
-  public isVisible: boolean = false;
-  public x: number = 0;
-  public y: number = 0;
-  public commands: ContextMenuCommandBase[] = [];
+export class ContextMenuComponent implements AfterViewInit {
+  isVisible: boolean = false;
+  x: number = 0;
+  y: number = 0;
+  commands: ContextMenuCommandBase[] = [];
   private mouseLeaveSubject = new Subject<void>();
   private mouseEnterSubject = new Subject<void>();
   private sub!: Subscription;
 
 
-  public constructor(ngZone: NgZone) {
+  constructor(
+    private _contextMenuService: ContextMenuService) {
+  }
+  
+  ngAfterViewInit(): void {
+    this._contextMenuService.inject(this);
   }
 
-  public open(event: MouseEvent, commands: ContextMenuCommandBase[]) {
+  open(event: MouseEvent, commands: ContextMenuCommandBase[]) {
     if (commands.length == 0) return;
     event.preventDefault();
     this.isVisible = true;
@@ -33,7 +39,7 @@ export class ContextMenuComponent {
     this.commands.push(...commands);
   }
 
-  public execute(event: MouseEvent, command: ContextMenuCommandBase) {
+  execute(event: MouseEvent, command: ContextMenuCommandBase) {
     event.preventDefault();
     command.execute(event);
     this.isVisible = false;
@@ -41,7 +47,7 @@ export class ContextMenuComponent {
 
 
   @HostListener('mouseleave')
-  public onMouseLeave(): void {
+  onMouseLeave(): void {
     this.sub?.unsubscribe();
     this.sub = this.mouseLeaveSubject.pipe(
       debounceTime(300),
@@ -54,7 +60,7 @@ export class ContextMenuComponent {
   }
 
   @HostListener('mouseenter')
-  public onMouseEnter(): void {
+  onMouseEnter(): void {
     this.mouseEnterSubject.next();
     this.sub?.unsubscribe();
   }

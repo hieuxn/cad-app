@@ -1,16 +1,16 @@
 import { BufferGeometry, Group, Line, LineBasicMaterial, Object3D, Vector3 } from "three";
-import { ManagedLayer } from "../../../models/layer.model";
-import { ContextMenuCommandBase } from "../../context-menu/commands/context-menu-command-base";
-import { ContextMenuGenericCommand } from "../../context-menu/commands/context-menu-generic-command";
-import { DrawingCommand } from "./drawing-command";
+import { ManagedLayer } from "../../../../models/managed-layer.model";
+import { ContextMenuCommandBase } from "../../../context-menu/commands/context-menu-command-base";
+import { ContextMenuGenericCommand } from "../../../context-menu/commands/context-menu-generic-command";
+import { DrawingCommand } from "./drawing.command";
 
-export class DrawingPolyLineCommand extends DrawingCommand {
-  public override name: string = "Draw Polyline";
+export class DrawPolyLineCommand extends DrawingCommand {
+  override name: string = "Draw Polyline";
   private isDrawingFinished: boolean = false;
   private forceFinish: boolean = false;
   private finishCommand!: ContextMenuCommandBase;
-  public color: number = 0x00FFFF;
-  public userData: Record<string, string> = {};
+  color: number = 0x00FFFF;
+  userData: Record<string, string> = {};
 
   protected override onInit() {
     this.finishCommand = ContextMenuGenericCommand.Create('Finish Polyline', (_) => {
@@ -23,7 +23,7 @@ export class DrawingPolyLineCommand extends DrawingCommand {
     super.onInit();
   }
 
-  public override execute(layer: ManagedLayer): void {
+  override execute(layer: ManagedLayer): void {
     super.execute(layer);
     this.isDrawingFinished = false;
     this.forceFinish = false;
@@ -45,8 +45,10 @@ export class DrawingPolyLineCommand extends DrawingCommand {
     const material = new LineBasicMaterial({ color: this.color });
     const line = new Line(geometry, material);
     line.userData = this.userData;
+    line.computeLineDistances();
+    line.scale.set(1, 1, 1);
     const group = new Group();
-    group.children.push(line);
+    group.add(line);
     group.name = this.userData['blockName'];
     return [group];
   }
@@ -61,6 +63,6 @@ export class DrawingPolyLineCommand extends DrawingCommand {
       this.finishCommand.isVisible = true;
     }
 
-    this.contextMenuWrapper.value.open(mouseEvent, this.contextMenuCommmands);
+    this.contextMenuService.open(mouseEvent, this.contextMenuCommmands);
   }
 }

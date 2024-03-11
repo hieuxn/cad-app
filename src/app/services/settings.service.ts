@@ -6,25 +6,25 @@ export type SettingsChangedArgs = { propertyName: string, newValue: number | str
 
 @Injectable({ providedIn: 'root' })
 export class SettingsService {
-  private settings: Map<string, any> = new Map<string, any>([
+  private _settings: Map<string, any> = new Map<string, any>([
     [Constants.Settings.SnapPrecisionProperty, 1],
     [Constants.Settings.DecimalPlacesProperty, 2]
   ]);
+  
+  private _changed: Subject<SettingsChangedArgs> = new Subject<SettingsChangedArgs>();
+  changedEvent$ = this._changed.asObservable();
 
-  private changed: Subject<SettingsChangedArgs> = new Subject<SettingsChangedArgs>();
-  public changedEvent$ = this.changed.asObservable();
-
-  public get(property: string): any {
-    return this.settings.get(property);
+  get(property: string): any {
+    return this._settings.get(property);
   }
 
-  public set(property: string, value: any) {
-    if (this.settings.get(property) === undefined) return;
-    this.settings.set(property, value);
+  set(property: string, value: any) {
+    if (this._settings.get(property) === undefined) return;
+    this._settings.set(property, value);
     this.notifyChange(property, value);
   }
 
   private notifyChange(property: string, value: any) {
-    this.changed.next({ propertyName: property, newValue: value });
+    this._changed.next({ propertyName: property, newValue: value });
   }
 }

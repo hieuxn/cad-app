@@ -5,8 +5,8 @@ import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSliderModule } from '@angular/material/slider';
-import { Constants } from '../../models/constants.model';
-import { SettingsService } from '../../services/settings.service';
+import { Constants } from '../../../models/constants.model';
+import { SettingsService } from '../../../services/settings.service';
 
 @Component({
   selector: 'app-settings-dialog',
@@ -16,9 +16,9 @@ import { SettingsService } from '../../services/settings.service';
   styleUrl: './settings-dialog.component.scss'
 })
 export class SettingsDialogComponent {
-  public readonly snapPrecision: string = Constants.Settings.SnapPrecisionProperty;
-  public readonly decimalPlaces: string = Constants.Settings.DecimalPlacesProperty;
-  public settings: any = {}
+  readonly snapPrecision: string = Constants.Settings.SnapPrecisionProperty;
+  readonly decimalPlaces: string = Constants.Settings.DecimalPlacesProperty;
+  settings: any = {}
 
   constructor(public dialogRef: MatDialogRef<SettingsDialogComponent>,
     private settingsService: SettingsService
@@ -31,11 +31,11 @@ export class SettingsDialogComponent {
     });
   }
 
-  public formatLabel(value: number): string {
+  formatLabel(value: number): string {
     return `${1 / Math.pow(10, value)}`
   }
 
-  public saveSettings(): void {
+  saveSettings(): void {
     Object.keys(this.settings).forEach(key => {
       const value = this.settings[key];
       if (value !== null && value !== undefined) {

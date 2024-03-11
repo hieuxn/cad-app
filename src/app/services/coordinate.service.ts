@@ -5,68 +5,68 @@ import { Constants } from "../models/constants.model";
 import { MouseService, SINGLETON_MOUSE_SERVICE_TOKEN } from "./mouse.service";
 import { SettingsChangedArgs, SettingsService } from "./settings.service";
 
-type amouseAction = (event: MouseEvent) => void
+type mouseAction = (event: MouseEvent) => void
 type action = () => void
 
 @Injectable({ providedIn: 'root' })
 export class CoordinateService {
-  private amouseAction!: amouseAction;
-  private unsubAction!: action;
-  private precision: number;
-  private tenths: number;
-  public gridSnap: boolean = false;
-  private subs: Subscription = new Subscription();
+  gridSnap: boolean = false;
+  private _mouseAction!: mouseAction;
+  private _unsubAction!: action;
+  private _precision: number;
+  private _tenths: number;
+  private _subs: Subscription = new Subscription();
 
   constructor(@Inject(SINGLETON_MOUSE_SERVICE_TOKEN) private mouseService: MouseService,
     private settingsService: SettingsService) {
-    this.precision = settingsService.get(Constants.Settings.SnapPrecisionProperty);
-    this.tenths = Math.pow(10, settingsService.get( Constants.Settings.DecimalPlacesProperty));
+    this._precision = settingsService.get(Constants.Settings.SnapPrecisionProperty);
+    this._tenths = Math.pow(10, settingsService.get( Constants.Settings.DecimalPlacesProperty));
 
-    this.subs.add(settingsService.changedEvent$.pipe(
+    this._subs.add(settingsService.changedEvent$.pipe(
       filter((value: SettingsChangedArgs) => value.propertyName === Constants.Settings.SnapPrecisionProperty),
     ).subscribe((value) => {
       this.setSnapPrecision(value.newValue as number)
     }));
 
-    this.subs.add(settingsService.changedEvent$.pipe(
+    this._subs.add(settingsService.changedEvent$.pipe(
       filter((value: SettingsChangedArgs) => value.propertyName === Constants.Settings.DecimalPlacesProperty),
     ).subscribe((value) => {
       this.setDecimalPlaces(value.newValue as number)
     }));
   }
 
-  public init(action: amouseAction, unsubAction: action) {
-    this.amouseAction = action;
-    this.unsubAction = unsubAction;
+  init(action: mouseAction, unsubAction: action) {
+    this._mouseAction = action;
+    this._unsubAction = unsubAction;
   }
 
-  public show(): Subscription {
-    const sub = this.mouseService.mouseMove$.subscribe(this.amouseAction);
-    sub.add(() => this.unsubAction());
+  show(): Subscription {
+    const sub = this.mouseService.mouseMove$.subscribe(this._mouseAction);
+    sub.add(() => this._unsubAction());
     return sub;
   }
 
-  public setSnapPrecision(number: number) {
-    this.precision = number;
+  setSnapPrecision(number: number) {
+    this._precision = number;
   }
 
-  public setDecimalPlaces(number: number) {
-    this.tenths = Math.pow(10, number);
+  setDecimalPlaces(number: number) {
+    this._tenths = Math.pow(10, number);
   }
 
-  public roundVec3(position: Vector3) {
+  roundVec3(position: Vector3) {
     position.set(this.round(position.x), this.round(position.y), this.round(position.z));
   }
 
-  public snapVec3(position: Vector3) {
+  snapVec3(position: Vector3) {
     position.set(+this.snap(position.x), +this.snap(position.y), +this.snap(position.z));
   }
 
-  public round(num: number): number {
-    return Math.round((num + Number.EPSILON) * this.tenths) / this.tenths;
+  round(num: number): number {
+    return Math.round((num + Number.EPSILON) * this._tenths) / this._tenths;
   }
 
-  public snap(number: number): string {
-    return number.toFixed(this.precision);
+  snap(number: number): string {
+    return number.toFixed(this._precision);
   }
 }

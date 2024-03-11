@@ -1,0 +1,7 @@
+<div class="toolbar">
+  @for (command of commands; track command.name; ; let even = $even ) {
+  <button mat-flat-button [color]="even ? 'primary': 'accent'" (click)="this.execute(command)">{{command.name}}</button>
+  } @empty {
+  Empty list of commands
+  }
+</div>

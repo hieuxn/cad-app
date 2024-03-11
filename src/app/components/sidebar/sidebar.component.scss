@@ -1,0 +1,85 @@
+mat-icon {
+  width: 100vw;
+}
+
+.container {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+}
+
+.fixed-sidebar {
+  display: flex;
+  flex-direction: column;
+  background-color: #333;
+  color: white;
+  width: 50px;
+  height: 100vh;
+  align-items: center;
+  position: relative;
+}
+
+.flex-item:last-child {
+  margin-top: auto;
+}
+
+.expandable-sidebar {
+  // display: flex;
+  // flex-direction: column;
+  background-color: #333;
+  color: white;
+  height: 100vh;
+  align-items: center;
+  position: relative;
+}
+
+.resize-handle {
+  width: 10px;
+  // background-color: #FFF;
+  cursor: ew-resize;
+  position: absolute;
+  top: 0;
+  height: 100vh;
+}
+
+.tab-content {
+  // display: flex;
+  // align-items: center;
+  width: 100%;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  cursor: pointer;
+  text-align: center;
+  position: absolute;
+  top: 0;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.tab i {
+  margin-right: 10px;
+}
+
+.tab:hover {
+  background-color: #444444;
+}
+
+.tab.active {
+  background-color: #007acc;
+}
+
+.tab span {
+  display: none;
+}
+
+.expandable-sidebar.expanded .tab span {
+  display: inline;
+}

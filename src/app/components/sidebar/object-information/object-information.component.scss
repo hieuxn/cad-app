@@ -1,0 +1,36 @@
+.scrollable-container {
+  max-height: 95vh;
+  overflow-y: auto;
+  display: block;
+  width: 100%;
+}
+
+.custom-mat-table {
+  background-color: #333333;
+  color: #ffffff;
+}
+
+th,
+td {
+  color: #ffffff;
+}
+
+input {
+  width: 95%;
+}
+
+.scrollable-container::-webkit-scrollbar {
+  width: 12px;
+}
+
+.scrollable-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.scrollable-container::-webkit-scrollbar-thumb {
+  background: #888;
+}
+
+.scrollable-container::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}

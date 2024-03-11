@@ -1,0 +1,48 @@
+<div class="container">
+  <div class="fixed-sidebar">
+    <div class="tab" (click)="selectTab('layers'); $event.stopPropagation()"
+      [ngClass]="{'active': activeTab === 'layers'}">
+      <mat-icon fontIcon="layers"></mat-icon>
+    </div>
+    <div class="tab" (click)="selectTab('geometries'); $event.stopPropagation()"
+      [ngClass]="{'active': activeTab === 'geometries'}">
+      <mat-icon fontIcon="widgets"></mat-icon>
+    </div>
+    <div class="tab" (click)="selectTab('families'); $event.stopPropagation()"
+      [ngClass]="{'active': activeTab === 'families'}">
+      <mat-icon fontIcon="gavel"></mat-icon>
+    </div>
+    <div class="tab" (click)="selectTab('info'); $event.stopPropagation()" [ngClass]="{'active': activeTab === 'info'}">
+      <mat-icon fontIcon="info"></mat-icon>
+    </div>
+    <div class="tab" (click)="selectTab('save'); $event.stopPropagation()" [ngClass]="{'active': activeTab === 'save'}">
+      <mat-icon fontIcon="save" />
+    </div>
+    <div class="tab flex-item" (click)="openSettingsDialog(); $event.stopPropagation()"
+      [ngClass]="{'active': activeTab === 'settings'}">
+      <mat-icon fontIcon="settings" />
+    </div>
+  </div>
+
+  <div class="expandable-sidebar" [ngClass]="{'expanded': isExpanded}" [style.width.px]="sidebarWidth">
+    <div class="tab-content" [style.visibility]="activeTab === 'layers' ? 'visible' : 'hidden'">
+      <app-layer-management></app-layer-management>
+    </div>
+    <div class="tab-content" [style.visibility]="activeTab === 'geometries' ? 'visible' : 'hidden'">
+      <app-drawing-toolbar></app-drawing-toolbar>
+    </div>
+    <div class="tab-content" [style.visibility]="activeTab === 'families' ? 'visible' : 'hidden'">
+      Families
+    </div>
+    <div class="tab-content" [style.visibility]="activeTab === 'info' ? 'visible' : 'hidden'">
+      <app-object-information [data]="selectedObject"></app-object-information>
+    </div>
+    <div class="tab-content" [style.visibility]="activeTab === 'save' ? 'visible' : 'hidden'">
+      <app-file-management></app-file-management>
+      <app-auto-save></app-auto-save>
+    </div>
+  </div>
+  <div class="resize-handle" cdkDrag (cdkDragMoved)="onResize($event)" *ngIf="isExpanded"
+    [style.margin-left.px]="dragHandleMarginleft">
+  </div>
+</div>

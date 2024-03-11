@@ -1,7 +1,6 @@
-import { Component } from '@angular/core';
-import { Raycaster, Vector2 } from 'three';
+import { Component, Injector } from '@angular/core';
 import { CoordinateService } from '../../services/coordinate.service';
-import { ViewerService } from '../../services/viewer.serive';
+import { LayerService } from '../../services/layer.service';
 
 
 @Component({
@@ -14,27 +13,24 @@ import { ViewerService } from '../../services/viewer.serive';
 
 export class CoordinateDisplayComponent {
   mouseCoordinates: string = '';
-  private raycaster = new Raycaster();
-  private mouse = new Vector2();
-  public tooltipDisplay: string = 'none';
-  public tooltipLeft: string = '0px';
-  public tooltipTop: string = '0px';
+  tooltipDisplay: string = 'none';
+  tooltipLeft: string = '0px';
+  tooltipTop: string = '0px';
+  private _coordinateService: CoordinateService;
+  private _layerService: LayerService;
 
-  public constructor(
-    private viewerService: ViewerService,
-    private coordinateService: CoordinateService) {
-    coordinateService.init(this.onMouseMove.bind(this), this.hideCoordinate.bind(this));
+  constructor(injector: Injector) {
+    this._coordinateService = injector.get(CoordinateService);
+    this._layerService = injector.get(LayerService);
+    this._coordinateService.init(this.onMouseMove.bind(this), this.hideCoordinate.bind(this));
   }
 
   private onMouseMove(event: MouseEvent): void {
-    this.mouse.x = (event.clientX / this.viewerService.view3D.renderer.domElement.clientWidth) * 2 - 1;
-    this.mouse.y = -(event.clientY / this.viewerService.view3D.renderer.domElement.clientHeight) * 2 + 1;
-
-    const snapped = this.viewerService.ConvertMousePositionToWorldSpace(this.mouse);
-    this.coordinateService.roundVec3(snapped);
-    const round = this.coordinateService.gridSnap
-      ? (num: number) => this.coordinateService.snap(num)
-      : (num: number) => this.coordinateService.round(num);
+    const snapped = this._layerService.convertMouseEventToWorldSpace(event);
+    this._coordinateService.roundVec3(snapped);
+    const round = this._coordinateService.gridSnap
+      ? (num: number) => this._coordinateService.snap(num)
+      : (num: number) => this._coordinateService.round(num);
 
     this.mouseCoordinates = `X: ${round(snapped.x)}, Y: ${round(snapped.y)}, Z: ${round(snapped.z)}`;
     this.tooltipDisplay = 'inline';

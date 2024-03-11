@@ -1,6 +1,7 @@
 import { DxfGlobalObject, EntityCommons } from "@dxfjs/parser";
 import { DxfBlock, DxfWriter, Units } from "@tarikjabiri/dxf";
 import { Group, Material, Vector3 } from "three";
+import { getLayerNameFromBlockName } from "../utils/block-name.utils";
 import { LengthUtils } from "../utils/length.utils";
 import { MaterialUtils } from "../utils/material.utils";
 
@@ -37,9 +38,10 @@ export class DxfWriterContext implements DxfContext {
     this.writer = writer;
   }
 
-  createSubContext(blockName: string): DxfWriterContext {
+  createSubContext(group: Group): DxfWriterContext {
     if (!(this.writer instanceof DxfWriter)) throw new Error(`Can't create block in block`);
-    const block = this.writer.addBlock(blockName);
+    const block = this.writer.addBlock(group.name);
+    block.layerName = getLayerNameFromBlockName(group.name);
     return new DxfWriterContext(this.materialUtils, block);
   }
 

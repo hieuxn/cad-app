@@ -270,13 +270,13 @@ export class ColorUtils {
       }, {} as Record<number, number>);
   }
 
-  public getColorByNumber(colorNumber: number): number {
+  getColorByNumber(colorNumber: number): number {
     const color = ColorUtils.colorNumberToHex[colorNumber];
     if (color) return color;
     return 0xFFFFFF;
   }
 
-  public getNumberByColor(hexColor: number): number {
+  getNumberByColor(hexColor: number): number {
     let number = ColorUtils.hexToColorNumber[hexColor];
     if (number) return number;
 

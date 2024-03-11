@@ -8,12 +8,56 @@ import { ColorUtils } from "./utils/color.utils";
 import { LengthUtils } from "./utils/length.utils";
 import { MaterialUtils } from "./utils/material.utils";
 
+// export class DxfMarshallingObject {
+//   header?: DxfHeaderSection;
+//   tables?: DxfTablesSection;
+//   blocks?: DxfBlocksSection;
+//   entities?: DxfEntitiesSection;
+// }
+
 export class DXFConverter extends BaseConverter {
-  public map!: Map<string, (context: any, obj: any) => any>;
+  map!: Map<string, (context: any, obj: any) => any>;
   private lengthUtils: LengthUtils = new LengthUtils();
   private materialUtils: MaterialUtils = new MaterialUtils(new ColorUtils());
 
-  public override async deserialize(file: File): Promise<Object3D[]> {
+  // public marshalling(object3Ds: Object3D[]): DxfMarshallingObject {
+  //   const writer = new DxfWriter();
+  //   const context = new DxfWriterContext(this.materialUtils, writer);
+  //   writer.setUnits(Units.Meters);
+  //   writer.addLayer('myDefaultLayer', 0xFF0000);
+
+  //   serializeEntities(context, object3Ds);
+
+  //   const dxfObj = {
+  //     header: writer.header,
+  //     tables: writer.tables,
+  //     blocks: writer.blocks,
+  //     entities: writer.entities,
+  //   }
+
+  //   return dxfObj;
+  // }
+
+  // public unmarshalling(dxfObject: DxfMarshallingObject): Object3D[] {
+  //   const object3Ds: Object3D[] = [];
+  //   const context = new DxfParserContext(dxfObjects, this.lengthUtils, this.materialUtils);
+
+  //   for (const block of dxfObjects.blocks) {
+  //     const group = new Group();
+  //     group.position.set(block.basePointX, block.basePointY, block.basePointZ);
+  //     group.name = block.name;
+  //     const objects = deserializeEntities(context, block.entities);
+  //     group.children.push(...objects);
+  //     context.groups.set(group.name, group);
+  //   }
+
+  //   const objects = deserializeEntities(context, dxfObjects.entities);
+  //   object3Ds.push(...objects);
+
+  //   return object3Ds;
+  // }
+
+  override async deserialize(file: File): Promise<Object3D[]> {
     const text = await this.readFileAsText(file, 'utf-8');
     const dxfObjects = await new Parser().parse(text);
 
@@ -25,7 +69,7 @@ export class DXFConverter extends BaseConverter {
       group.position.set(block.basePointX, block.basePointY, block.basePointZ);
       group.name = block.name;
       const objects = deserializeEntities(context, block.entities);
-      group.children.push(...objects);
+      if (objects.length !== 0) group.add(...objects);
       context.groups.set(group.name, group);
     }
 
@@ -35,7 +79,7 @@ export class DXFConverter extends BaseConverter {
     return object3Ds;
   }
 
-  public override async serialize(objects: Object3D[]): Promise<File> {
+  override async serialize(objects: Object3D[]): Promise<File> {
     const writer = new DxfWriter();
     const context = new DxfWriterContext(this.materialUtils, writer);
     writer.setUnits(Units.Meters);

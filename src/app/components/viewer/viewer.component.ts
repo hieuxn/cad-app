@@ -1,7 +1,8 @@
-import { AfterViewInit, Component, HostListener, Inject, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, HostListener, Injector, OnInit, ViewChild } from '@angular/core';
 import { TitleSpacingPipe } from '../../pipes/title-spacing/title-spacing.pipe';
+import { MainView3DService } from '../../services/main-view-3d.service';
 import { MouseService, SINGLETON_MOUSE_SERVICE_TOKEN } from '../../services/mouse.service';
-import { ViewerService } from '../../services/viewer.serive';
+import { ViewSyncUtils } from '../../utils/viewer.utils';
 import { ViewNavigatorComponent } from './view-navigator/view-navigator.component';
 import { ViewThreeDComponent } from './view-three-d/view-three-d.component';
 
@@ -13,39 +14,46 @@ import { ViewThreeDComponent } from './view-three-d/view-three-d.component';
   styleUrl: './viewer.component.scss'
 })
 export class ViewerComponent implements OnInit, AfterViewInit {
-  @ViewChild('view3D') private view!: ViewThreeDComponent;
-  @ViewChild('viewNavigator') private viewNavigator!: ViewNavigatorComponent;
+  @ViewChild('viewNavigator') private _viewNavigator!: ViewNavigatorComponent;
+  private _viewSyncUtils: ViewSyncUtils
+  private _mainView3DService: MainView3DService;
+  private _mouseService: MouseService;
 
-  public constructor(
-    @Inject(SINGLETON_MOUSE_SERVICE_TOKEN) private mouseService: MouseService,
-    private viewerService: ViewerService
-  ) {
+  constructor(injector: Injector) {
+    this._mainView3DService = injector.get(MainView3DService);
+    this._mouseService = injector.get(SINGLETON_MOUSE_SERVICE_TOKEN);
+    this._viewSyncUtils = new ViewSyncUtils()
   }
 
-  public ngAfterViewInit(): void {
-    this.viewerService.init(this.view, this.viewNavigator);
+  ngAfterViewInit(): void {
+    this._viewSyncUtils.sync(this._mainView3DService, this._viewNavigator);
   }
 
-  public ngOnInit(): void {
+  ngOnInit(): void {
   }
 
   @HostListener('mousedown', ['$event'])
-  public mouseDown(event: MouseEvent): void {
-    this.mouseService.mouseDownInvoke(event);
+  mouseDown(event: MouseEvent): void {
+    this._mouseService.mouseDownInvoke(event);
   }
 
   @HostListener('mouseup', ['$event'])
-  public mouseUp(event: MouseEvent): void {
-    this.mouseService.mouseUpInvoke(event);
+  mouseUp(event: MouseEvent): void {
+    this._mouseService.mouseUpInvoke(event);
   }
 
   @HostListener('mousemove', ['$event'])
-  public mouseMove(event: MouseEvent): void {
-    this.mouseService.mouseMoveInvoke(event);
+  mouseMove(event: MouseEvent): void {
+    this._mouseService.mouseMoveInvoke(event);
   }
 
   @HostListener('document:contextmenu', ['$event'])
-  public mouseContextMenu(event: MouseEvent): void {
-    this.mouseService.mouseContextMenuInvoke(event);
+  mouseContextMenu(event: MouseEvent): void {
+    this._mouseService.mouseContextMenuInvoke(event);
+  }
+
+  @HostListener('wheel', ['$event'])
+  wheel(event: MouseEvent): void {
+    this._mouseService.wheel(event);
   }
 }

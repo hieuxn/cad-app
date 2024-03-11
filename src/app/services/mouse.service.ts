@@ -5,29 +5,35 @@ export const SINGLETON_MOUSE_SERVICE_TOKEN = new InjectionToken<MouseService>('S
 export const SCOPED_MOUSE_SERVICE_TOKEN = new InjectionToken<MouseService>('ScopedService');
 
 export class MouseService {
-  private mouseDown = new Subject<MouseEvent>();
-  private mouseUp = new Subject<MouseEvent>();
-  private mouseMove = new Subject<MouseEvent>();
-  private mouseContextMenu = new Subject<MouseEvent>();
+  private _mouseDown = new Subject<MouseEvent>();
+  private _mouseUp = new Subject<MouseEvent>();
+  private _mouseMove = new Subject<MouseEvent>();
+  private _mouseContextMenu = new Subject<MouseEvent>();
+  private _wheel = new Subject<MouseEvent>();
 
-  public mouseDown$ = this.mouseDown.asObservable();
-  public mouseUp$ = this.mouseUp.asObservable();
-  public mouseMove$ = this.mouseMove.asObservable();
-  public mouseContextMenu$ = this.mouseContextMenu.asObservable();
+  mouseDown$ = this._mouseDown.asObservable();
+  mouseUp$ = this._mouseUp.asObservable();
+  mouseMove$ = this._mouseMove.asObservable();
+  mouseContextMenu$ = this._mouseContextMenu.asObservable();
+  wheel$ = this._wheel.asObservable();
 
-  public mouseDownInvoke(event: MouseEvent) {
-    this.mouseDown.next(event);
+  mouseDownInvoke(event: MouseEvent) {
+    this._mouseDown.next(event);
   }
 
-  public mouseUpInvoke(event: MouseEvent) {
-    this.mouseUp.next(event);
+  mouseUpInvoke(event: MouseEvent) {
+    this._mouseUp.next(event);
   }
 
-  public mouseMoveInvoke(event: MouseEvent) {
-    this.mouseMove.next(event);
+  mouseMoveInvoke(event: MouseEvent) {
+    this._mouseMove.next(event);
   }
 
-  public mouseContextMenuInvoke(event: MouseEvent) {
-    this.mouseContextMenu.next(event);
+  mouseContextMenuInvoke(event: MouseEvent) {
+    this._mouseContextMenu.next(event);
+  }
+
+  wheel(event: MouseEvent) {
+    this._wheel.next(event);
   }
 }
