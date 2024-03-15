@@ -1,12 +1,11 @@
-import { CylinderGeometry, Group, LineLoop, Mesh, MeshBasicMaterial, Object3D, RingGeometry, Vector3 } from "three";
-import { ManagedLayer } from "../../../../models/managed-layer.model";
+import { LineLoop, Mesh, Object3D, Vector3 } from "three";
+import { MousePlacementCommand } from "../../../../commands/mouse-placement.command";
 import { ContextMenuCommandBase } from "../../../context-menu/commands/context-menu-command-base";
-import { DrawingCommand } from "./drawing.command";
 
-export class DrawCylinderCommand extends DrawingCommand {
+export class DrawCylinderCommand extends MousePlacementCommand {
   override name: string = "Cylinder";
   color: number = 0x8888FF;
-  userData: Record<string, string> = {};
+  userData: Record<string, string | number> = { 'height': 1 };
   private _forceFinish: boolean = false;
   private _finishCommand!: ContextMenuCommandBase;
   private _defaultRadius = 0.1; //m
@@ -16,8 +15,8 @@ export class DrawCylinderCommand extends DrawingCommand {
     super.onInit();
   }
 
-  override execute(layer: ManagedLayer): void {
-    super.execute(layer);
+  override execute(): void {
+    super.execute();
     this._forceFinish = false;
   }
 
@@ -27,27 +26,20 @@ export class DrawCylinderCommand extends DrawingCommand {
     return click2Times;
   }
 
-  protected override drawShapeImplementation(mouseLocations: Vector3[]): Object3D[] | null {
+  protected override onCommandExecute(mouseLocations: Vector3[]): Object3D[] | null {
     if (mouseLocations.length == 2) {
       this._defaultRadius = mouseLocations[0].distanceTo(mouseLocations[1]);
     }
-    const geometry = new CylinderGeometry(this._defaultRadius, this._defaultRadius, this._defaultLength, 32);
-    geometry.rotateX(Math.PI * 0.5);
-    const material = new MeshBasicMaterial({ color: this.color });
-    const cylinder = new Mesh(geometry, material);
+    
+    const group = this.objectCreatorService.cylinder.create(this._defaultLength, this._defaultRadius, 32);
+    group.name = this.userData['blockName'] as string;
 
+    const cylinder = group.children[0] as Mesh;
     const spawnPosition = mouseLocations.at(0)!.clone().add(new Vector3(0, 0, this._defaultLength * -0.5));
     cylinder.position.copy(spawnPosition);
 
-    const geometry2 = new RingGeometry(this._defaultRadius, this._defaultRadius, 16);
-    const material2 = new MeshBasicMaterial({ color: this.color });
-    const circleOutline = new LineLoop(geometry2, material2);
+    const circleOutline = group.children[1] as LineLoop;
     circleOutline.position.copy(mouseLocations.at(0)!);
-
-    const group = new Group();
-    group.add(cylinder);
-    group.add(circleOutline);
-    group.name = this.userData['blockName'];
     return [group];
   }
 

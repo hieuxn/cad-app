@@ -1,10 +1,11 @@
 import { Injectable, Injector } from '@angular/core';
-import { Box2, OrthographicCamera, PerspectiveCamera, Scene, Vector2, Vector3 } from 'three';
+import { Box2, Object3D, OrthographicCamera, PerspectiveCamera, Scene, Vector2, Vector3 } from 'three';
 import { ContextMenuCommandBase } from '../components/context-menu/commands/context-menu-command-base';
 import { ContextMenuGenericCommand } from '../components/context-menu/commands/context-menu-generic-command';
 import { ManagedLayer } from '../models/managed-layer.model';
 import { HighLightUtils } from '../utils/highlight.utils';
 import { ContextMenuService } from './context-menu.service';
+import { FamilyCreatorService } from './family-creator/family-creator.service';
 import { MainView3DService } from './main-view-3d.service';
 import { SINGLETON_MOUSE_SERVICE_TOKEN } from './mouse.service';
 
@@ -18,6 +19,7 @@ export class LayerService {
 	private _mainViewService: MainView3DService;
 	private _contextMenuService: ContextMenuService;
 	private _contextMenuCommands: ContextMenuCommandBase[] = [];
+	private _familyCreatorService: FamilyCreatorService;
 
 	get layers(): ManagedLayer[] {
 		return this._layers;
@@ -27,6 +29,7 @@ export class LayerService {
 		this._mainViewService = _injector.get(MainView3DService);
 		this._contextMenuService = _injector.get(ContextMenuService);
 		this.highlightUtils = new HighLightUtils(this);
+		this._familyCreatorService = _injector.get(FamilyCreatorService);
 		this._initContextMenuCommands();
 	}
 
@@ -58,9 +61,21 @@ export class LayerService {
 			}
 		}, false);
 
+		const createFamilyCommand = ContextMenuGenericCommand.Create('Create Family', (event) => {
+			if (this.activeLayer.objUtils.selectedObjects.size === 0) return;
+			const group: Object3D[] = [];
+			for (const [obj, _] of this.activeLayer!.objUtils.selectedObjects.values()) {
+				group.push(obj);
+			}
+
+			this.activeLayer!.objUtils.deSelectAll();
+			this._familyCreatorService.openFamilyCreatorDialog(group);
+		}, false);
+
 		this._contextMenuCommands.push(snappingCommand);
 		this._contextMenuCommands.push(unSnappingCommand);
 		this._contextMenuCommands.push(deleteCommand);
+		this._contextMenuCommands.push(createFamilyCommand);
 	}
 
 	private _onMouseMove(event: MouseEvent) {
@@ -84,7 +99,9 @@ export class LayerService {
 
 	private _onMenuContextOpening(event: MouseEvent) {
 		const deleteCommand = this._contextMenuCommands[2];
-		deleteCommand.isVisible = this.activeLayer!.objUtils.selectedObjects.size > 0;
+		const createFamilyCommand = this._contextMenuCommands[3];
+
+		deleteCommand.isVisible = createFamilyCommand.isVisible = this.activeLayer!.objUtils.selectedObjects.size > 0;
 		this._contextMenuService.open(event, this._contextMenuCommands);
 	}
 

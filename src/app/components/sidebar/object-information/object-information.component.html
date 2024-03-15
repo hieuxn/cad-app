@@ -1,18 +1,18 @@
 <div class="scrollable-container">
   <form [formGroup]="tableForm">
-    <table mat-table [dataSource]="rows.controls" class="mat-elevation-z8 custom-mat-table" formArrayName="rows"
-      (click)="cancelEdit(-1)">
+    <table mat-table [dataSource]="rows.controls" class="mat-elevation-z8 custom-mat-table" formArrayName="rows">
 
       <ng-container matColumnDef="name">
         <th mat-header-cell *matHeaderCellDef> Name </th>
-        <td mat-cell *matCellDef="let element; let i = index" [formGroupName]="i"> {{element.get('name').value}} </td>
+        <td mat-cell *matCellDef="let element; let i = index" [formGroupName]="i"> {{element.get('name').value |
+          titleSpacing}} </td>
       </ng-container>
 
       <ng-container matColumnDef="value">
         <th mat-header-cell *matHeaderCellDef> Value </th>
         <td mat-cell *matCellDef="let element; let i = index" [formGroupName]="i">
-          <input #input *ngIf="editingIndex === i" matInput formControlName="value" (blur)="cancelEdit(i)"
-            (keydown)="handleKeydown($event, i)" appAutofocus>
+          <input #input *ngIf="editingIndex === i" matInput formControlName="value" (keydown)="handleKeydown($event, i)"
+            appAutofocus (blur)="cancelEdit(-1)">
           <div *ngIf="editingIndex !== i" (dblclick)="startEdit(i, element.get('value').value) ">
             {{element.get('value').value}}
           </div>

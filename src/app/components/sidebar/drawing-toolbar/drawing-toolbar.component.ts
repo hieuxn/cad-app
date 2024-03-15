@@ -1,9 +1,9 @@
 import { Component, Injector } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
+import { MousePlacementCommand } from '../../../commands/mouse-placement.command';
 import { LayerService } from '../../../services/layer.service';
 import { DrawCylinderCommand } from './commands/draw-cylinder.command';
 import { DrawPolyLineCommand } from './commands/draw-polyline.command';
-import { DrawingCommand } from './commands/drawing.command';
 
 @Component({
   selector: 'app-drawing-toolbar',
@@ -13,8 +13,8 @@ import { DrawingCommand } from './commands/drawing.command';
   styleUrl: './drawing-toolbar.component.scss'
 })
 export class DrawingToolbarComponent {
-  commands!: DrawingCommand[];
-  private currentCommand: DrawingCommand | null = null;
+  commands!: MousePlacementCommand[];
+  private currentCommand: MousePlacementCommand | null = null;
   private layerService: LayerService;
 
   constructor(injector: Injector) {
@@ -36,11 +36,11 @@ export class DrawingToolbarComponent {
     this.commands = [polyline, cylinder];
   }
 
-  execute(drawingCommand: DrawingCommand) {
+  execute(drawingCommand: MousePlacementCommand) {
     this.currentCommand?.cancel();
     const layer = this.layerService.activeLayer;
     if (layer) {
-      drawingCommand.execute(layer);
+      drawingCommand.execute();
     }
     this.currentCommand = drawingCommand;
   }

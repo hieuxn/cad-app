@@ -18,8 +18,7 @@
     <div class="tab" (click)="selectTab('save'); $event.stopPropagation()" [ngClass]="{'active': activeTab === 'save'}">
       <mat-icon fontIcon="save" />
     </div>
-    <div class="tab flex-item" (click)="openSettingsDialog(); $event.stopPropagation()"
-      [ngClass]="{'active': activeTab === 'settings'}">
+    <div class="tab flex-item" (click)="openSettingsDialog(); $event.stopPropagation()">
       <mat-icon fontIcon="settings" />
     </div>
   </div>
@@ -32,10 +31,10 @@
       <app-drawing-toolbar></app-drawing-toolbar>
     </div>
     <div class="tab-content" [style.visibility]="activeTab === 'families' ? 'visible' : 'hidden'">
-      Families
+      <app-family-creator-pane></app-family-creator-pane>
     </div>
     <div class="tab-content" [style.visibility]="activeTab === 'info' ? 'visible' : 'hidden'">
-      <app-object-information [data]="selectedObject"></app-object-information>
+      <app-object-information></app-object-information>
     </div>
     <div class="tab-content" [style.visibility]="activeTab === 'save' ? 'visible' : 'hidden'">
       <app-file-management></app-file-management>

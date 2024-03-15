@@ -40,7 +40,7 @@ export class ObjectManipulation extends ObjectSnapping {
     sub = this._mouseService.mouseDown$.subscribe(event => {
       if (event.button !== 0) return;
       const mousePosition = this._layerService.getMouseNDC(event);
-      this.select(mousePosition, event.ctrlKey);
+      this._select(mousePosition, event.ctrlKey);
     })
     this._subscription.add(sub);
 
@@ -90,7 +90,7 @@ export class ObjectManipulation extends ObjectSnapping {
     this._hoveredObjects.clear();
   }
 
-  private select(mouseNDC: THREE.Vector2, multiSelect: boolean): void {
+  private _select(mouseNDC: THREE.Vector2, multiSelect: boolean): void {
     const activeId = this._layerService.activeLayer.id;
     this._raycaster.layers.set(activeId);
 
@@ -148,12 +148,16 @@ export class ObjectManipulation extends ObjectSnapping {
     }
 
     // Deselect all
+    this.deSelectAll();
+    this.selectedObjects.clear();
+  }
+
+  deSelectAll() {
     this.selectedObjects.forEach(([selectedObj, mat], uuid) => {
       if (!('material' in selectedObj && selectedObj.material instanceof Material)) return;
       selectedObj.material = this.selectedObjects.get(uuid)?.[1];
       this.selectedObjects.delete(uuid);
     });
-    this.selectedObjects.clear();
   }
 
   private _add(object: Object3D, material: Material) {

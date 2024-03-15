@@ -1,10 +1,9 @@
 import { BufferGeometry, Group, Line, LineBasicMaterial, Object3D, Vector3 } from "three";
-import { ManagedLayer } from "../../../../models/managed-layer.model";
+import { MousePlacementCommand } from "../../../../commands/mouse-placement.command";
 import { ContextMenuCommandBase } from "../../../context-menu/commands/context-menu-command-base";
 import { ContextMenuGenericCommand } from "../../../context-menu/commands/context-menu-generic-command";
-import { DrawingCommand } from "./drawing.command";
 
-export class DrawPolyLineCommand extends DrawingCommand {
+export class DrawPolyLineCommand extends MousePlacementCommand {
   override name: string = "Draw Polyline";
   private isDrawingFinished: boolean = false;
   private forceFinish: boolean = false;
@@ -23,8 +22,8 @@ export class DrawPolyLineCommand extends DrawingCommand {
     super.onInit();
   }
 
-  override execute(layer: ManagedLayer): void {
-    super.execute(layer);
+  override execute(): void {
+    super.execute();
     this.isDrawingFinished = false;
     this.forceFinish = false;
   }
@@ -40,7 +39,7 @@ export class DrawPolyLineCommand extends DrawingCommand {
     return this.isDrawingFinished = isClosedPolyline;
   }
 
-  protected override drawShapeImplementation(mouseLocations: Vector3[]): Object3D[] | null {
+  protected override onCommandExecute(mouseLocations: Vector3[]): Object3D[] | null {
     const geometry = new BufferGeometry().setFromPoints(mouseLocations);
     const material = new LineBasicMaterial({ color: this.color });
     const line = new Line(geometry, material);
