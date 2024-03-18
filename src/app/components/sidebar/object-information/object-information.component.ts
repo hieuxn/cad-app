@@ -3,12 +3,15 @@ import { AfterViewInit, Component, Injector } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatInputModule } from '@angular/material/input';
 import { MatTableModule } from '@angular/material/table';
-import { Group, Object3D, Scene } from 'three';
+import { ColorPickerModule } from 'ngx-color-picker';
+import { Group, Object3D } from 'three';
 import { AutofocusDirective } from '../../../directives/auto-focus.directive';
 import { TitleSpacingPipe } from '../../../pipes/title-spacing/title-spacing.pipe';
+import { FamilyCreatorService } from '../../../services/family-creator/family-creator.service';
 import { LayerService } from '../../../services/layer.service';
 import { ObjectCreatorService } from '../../../services/object-creator/object-creator.service';
 import { SidebarService } from '../../../services/sidebar.service';
+import { ThreeUtils } from '../../../utils/three.utils';
 
 export interface ObjectData {
   id: number;
@@ -19,7 +22,7 @@ export interface ObjectData {
 @Component({
   selector: 'app-object-information',
   standalone: true,
-  imports: [MatTableModule, TitleSpacingPipe, MatInputModule, ReactiveFormsModule, NgIf, AutofocusDirective],
+  imports: [MatTableModule, TitleSpacingPipe, MatInputModule, ReactiveFormsModule, NgIf, AutofocusDirective, ColorPickerModule],
   templateUrl: './object-information.component.html',
   styleUrl: './object-information.component.scss'
 })
@@ -30,6 +33,8 @@ export class ObjectInformationComponent implements AfterViewInit {
   private _sidebarService: SidebarService;
   private _formBuilder: FormBuilder
   private _objectCreatorService: ObjectCreatorService;
+  private _familyCreatorService: FamilyCreatorService;
+  private _threeUtils = new ThreeUtils();
 
   get rows(): FormArray {
     return this.tableForm.get('rows') as FormArray;
@@ -39,6 +44,7 @@ export class ObjectInformationComponent implements AfterViewInit {
     this._sidebarService = injector.get(SidebarService);
     this._formBuilder = injector.get(FormBuilder);
     this._objectCreatorService = injector.get(ObjectCreatorService);
+    this._familyCreatorService = injector.get(FamilyCreatorService);
     this.tableForm = this._formBuilder.group({ rows: this._formBuilder.array([]) });
   }
 
@@ -50,16 +56,8 @@ export class ObjectInformationComponent implements AfterViewInit {
     });
   }
 
-  private _getParent(object: Object3D | null): Object3D | null {
-    let parent = object;
-    while (!!parent && !(parent.parent instanceof Scene)) {
-      parent = parent.parent;
-    }
-    return parent;
-  }
-
   private _buildForm(object: Object3D): void {
-    const obj = this._getParent(object);
+    const obj = this._threeUtils._getParentGroup(object);
     const data = Object.entries(obj?.userData ?? {})
     let index = 1;
     data.forEach(row => {
@@ -68,7 +66,7 @@ export class ObjectInformationComponent implements AfterViewInit {
         this._formBuilder.group({
           id: [index++],
           name: [row[0]],
-          value: [row[1]],
+          value: [row[0] === 'color' ? '#' + row[1] : row[1]],
           object: obj,
         })
       );
@@ -81,6 +79,10 @@ export class ObjectInformationComponent implements AfterViewInit {
     this._originalValues.set(rowIndex, value);
   }
 
+  // format(row: AbstractControl<any, any>) {
+  //   return row.get('name')?.value === 'color' ? '#' + row.get('value')?.value.toString(16) : row.get('value')?.value;
+  // }
+
   private _stopEdit(rowIndex: number): void {
     this.editingIndex = null;
     this._originalValues.delete(rowIndex);
@@ -89,13 +91,31 @@ export class ObjectInformationComponent implements AfterViewInit {
   private _reflectNewValue(rowIndex: number) {
     const row = this.rows.at(rowIndex);
     const name = row.get('name')?.value || undefined;
-    const value = row.get('value')?.value || undefined;
+    let value = row.get('value')?.value || undefined;
     const group = row.get('object')?.value as Group || null;
     if (undefined === name || undefined === value || null === group) return;
 
-    group.userData[name] = +value;
-    this._objectCreatorService.cylinder.update(group)
+    const parent = this._threeUtils._getParentGroup(group);
+
+    const parsed = parseFloat(value);
+    value = isNaN(parsed) ? value : parsed;
+
+    if (parent && parent !== group) {
+      const currentInstances = parent.children.filter((o): o is Group => !!o);
+      const familyTemplate = this._familyCreatorService.familyMap.get(parent.uuid) as Group;
+      if (familyTemplate) currentInstances.push(familyTemplate);
+
+      for (const familyInstances of currentInstances) {
+        familyInstances.userData[name] = value;
+        this._objectCreatorService.cylinder.update(familyInstances)
+      }
+    }
+    else {
+      group.userData[name] = value;
+      this._objectCreatorService.cylinder.update(group)
+    }
   }
+
 
   handleKeydown(event: KeyboardEvent, rowIndex: number): void {
     if (event.key === 'Enter') {
@@ -104,6 +124,11 @@ export class ObjectInformationComponent implements AfterViewInit {
     } else if (event.key === 'Escape') {
       this.cancelEdit(rowIndex);
     }
+  }
+
+  colorPickerChange(rowIndex: number) {
+    this._stopEdit(rowIndex);
+    this._reflectNewValue(rowIndex);
   }
 
   cancelEdit(rowIndex: number): void {

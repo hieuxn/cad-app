@@ -18,11 +18,11 @@ export abstract class MousePlacementCommand {
   protected contextMenuService: ContextMenuService;
   protected objectCreatorService: ObjectCreatorService;
   protected showPreviewWithoutClicking: boolean = false;
+  protected _layerService: LayerService;
   private _object3Ds: Object3D[] | null = [];
   private _mouseUpCount: number = 0;
   private _coordinateService: CoordinateService;
   private _mouseService: MouseService;
-  private _layerService: LayerService;
 
   constructor(injector: Injector) {
     this._coordinateService = injector.get(CoordinateService);

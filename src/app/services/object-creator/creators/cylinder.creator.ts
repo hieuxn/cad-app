@@ -1,10 +1,10 @@
-import { CylinderGeometry, Group, LineLoop, Mesh, MeshBasicMaterial, RingGeometry } from "three";
+import { CylinderGeometry, Group, LineLoop, Mesh, MeshBasicMaterial, MeshLambertMaterial, RingGeometry } from "three";
 
 export class CylinderCreator {
   create(depth: number, radius: number, radialSegments: number = 32, color: number = 0x8888FF): Group {
     const geometry = new CylinderGeometry(radius, radius, depth, radialSegments);
     geometry.rotateX(Math.PI * 0.5);
-    const material = new MeshBasicMaterial({ color: color });
+    const material = new MeshLambertMaterial({ color: color });
     const cylinder = new Mesh(geometry, material);
 
     const geometry2 = new RingGeometry(radius, radius, radialSegments);
@@ -27,10 +27,11 @@ export class CylinderCreator {
     const oldCylinder = group.children[0] as Mesh;
     const geometry = new CylinderGeometry(radius, radius, depth, radialSegments);
     geometry.rotateX(Math.PI * 0.5);
-    const material = new MeshBasicMaterial({ color: color });
+    const material = new MeshLambertMaterial({ color: color });
     const cylinder = new Mesh(geometry, material);
     cylinder.position.copy(oldCylinder.position);
     cylinder.position.z = depth * -0.5;
+    cylinder.castShadow = true;
 
     let positions = this.getSetBitPositions(oldCylinder.layers.mask);
     positions.forEach(pos => cylinder.layers.set(pos));

@@ -55,7 +55,8 @@ export class SidebarComponent implements AfterViewInit {
       this.sidebarWidth = 0;
       return;
     }
-    this.sidebarWidth = this.resizeSidebarWidth = event.pointerPosition.x - this.fixedSidebarWidth;
+    const newSize = Math.max(event.pointerPosition.x - this.fixedSidebarWidth, 200);
+    this.sidebarWidth = this.resizeSidebarWidth = newSize;
   }
 
   selectTab(tab: tab, show: boolean = false): void {

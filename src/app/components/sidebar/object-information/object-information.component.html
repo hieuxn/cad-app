@@ -11,9 +11,16 @@
       <ng-container matColumnDef="value">
         <th mat-header-cell *matHeaderCellDef> Value </th>
         <td mat-cell *matCellDef="let element; let i = index" [formGroupName]="i">
-          <input #input *ngIf="editingIndex === i" matInput formControlName="value" (keydown)="handleKeydown($event, i)"
-            appAutofocus (blur)="cancelEdit(-1)">
-          <div *ngIf="editingIndex !== i" (dblclick)="startEdit(i, element.get('value').value) ">
+          <ng-container *ngIf="editingIndex === i">
+            <input *ngIf="element.get('name').value === 'color'" [(colorPicker)]="element.get('value').value"
+              [style.background]="element.get('value').value"
+              (colorPickerChange)="element.get('value').setValue($event);" (colorPickerClose)="colorPickerChange(i)"
+              (keydown)="handleKeydown($event, i)" appAutofocus>
+
+            <input *ngIf="element.get('name').value !== 'color'" #input matInput formControlName="value"
+              (keydown)="handleKeydown($event, i)" appAutofocus (blur)="cancelEdit(-1)">
+          </ng-container>
+          <div *ngIf="editingIndex !== i" (dblclick)="startEdit(i, element.get('value').value)">
             {{element.get('value').value}}
           </div>
         </td>

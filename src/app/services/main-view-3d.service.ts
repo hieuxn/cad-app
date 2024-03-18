@@ -1,6 +1,6 @@
 import { ElementRef, Injectable, Injector } from "@angular/core";
 import { Subject } from "rxjs";
-import { AxesHelper, Camera, Clock, Color, GridHelper, Object3D, OrthographicCamera, PerspectiveCamera, Scene, WebGLRenderer } from "three";
+import { AmbientLight, AxesHelper, Camera, Clock, Color, GridHelper, Object3D, OrthographicCamera, PCFShadowMap, PerspectiveCamera, Scene, SpotLight, WebGLRenderer } from "three";
 import { MapControls } from "three/examples/jsm/controls/MapControls.js";
 import { ManagedLayer } from "../models/managed-layer.model";
 
@@ -76,9 +76,26 @@ export class MainView3DService {
     this._scene = new Scene();
     this._scene.background = new Color(0x222222);
 
+    this._scene.add(new AmbientLight(0xaaaaaa));
+
+    const light = new SpotLight(0xffffff, 10000);
+    light.position.set(0, 25, 50);
+    light.angle = Math.PI / 5;
+
+    light.castShadow = true;
+    light.shadow.camera.near = 10;
+    light.shadow.camera.far = 100;
+    light.shadow.mapSize.width = 1024;
+    light.shadow.mapSize.height = 1024;
+
+    this._scene.add(light);
+
     this.renderer = new WebGLRenderer();
     const container = threeContainer.nativeElement;
     this.renderer.setSize(container.clientWidth, container.clientHeight);
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = PCFShadowMap;
+
     container.appendChild(this.renderer.domElement);
     window.addEventListener('resize', () => this._onWindowResize(threeContainer));
 
