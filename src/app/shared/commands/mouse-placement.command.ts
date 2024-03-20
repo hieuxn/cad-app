@@ -50,13 +50,13 @@ export abstract class MousePlacementCommand {
   protected onInit() {
 
     this._coordinateService.gridSnap = true;
-    const snappingCommand = ContextMenuGenericCommand.Create('Enable snapping to grid', (event) => {
+    const snappingCommand = ContextMenuGenericCommand.create('Enable snapping to grid', (event) => {
       snappingCommand.isVisible = false;
       unSnappingCommand.isVisible = true;
       this._coordinateService.gridSnap = true;
     }, false);
 
-    const unSnappingCommand = ContextMenuGenericCommand.Create('Disable snapping to grid', (event) => {
+    const unSnappingCommand = ContextMenuGenericCommand.create('Disable snapping to grid', (event) => {
       snappingCommand.isVisible = true;
       unSnappingCommand.isVisible = false;
       this._coordinateService.gridSnap = false;
@@ -65,7 +65,7 @@ export abstract class MousePlacementCommand {
     this.contextMenuCommmands.push(snappingCommand);
     this.contextMenuCommmands.push(unSnappingCommand);
 
-    const cancelCommand = ContextMenuGenericCommand.Create('Cancel', (event) => {
+    const cancelCommand = ContextMenuGenericCommand.create('Cancel', (event) => {
       if (this._object3Ds) {
         this._layerService.activeLayer!.removeObjects(this._object3Ds);
       }

@@ -2,7 +2,7 @@ import { AfterViewInit, Component, HostListener, Injector, OnInit, ViewChild } f
 import { TitleSpacingPipe } from '../../../shared/pipes/title-spacing/title-spacing.pipe';
 import { MainView3DService } from '../../../shared/services/main-view-3d.service';
 import { MouseService, SINGLETON_MOUSE_SERVICE_TOKEN } from '../../../shared/services/mouse.service';
-import { ViewSyncUtils } from '../../utils/viewer.utils';
+import { ViewSyncUtils } from '../../../shared/utils/viewer.utils';
 import { ViewNavigatorComponent } from './view-navigator/view-navigator.component';
 import { ViewThreeDComponent } from './view-three-d/view-three-d.component';
 

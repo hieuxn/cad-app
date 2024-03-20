@@ -1,8 +1,7 @@
 import { ElementRef, Injectable, Injector } from "@angular/core";
-import { Subject } from "rxjs";
-import { AmbientLight, AxesHelper, Camera, Clock, Color, GridHelper, Object3D, OrthographicCamera, PCFShadowMap, PerspectiveCamera, Scene, SpotLight, WebGLRenderer } from "three";
+import { Subject, takeUntil } from "rxjs";
+import { AmbientLight, AxesHelper, Camera, Clock, Color, GridHelper, MOUSE, Object3D, OrthographicCamera, PCFShadowMap, PerspectiveCamera, Scene, SpotLight, WebGLRenderer } from "three";
 import { MapControls } from "three/examples/jsm/controls/MapControls.js";
-import { ManagedLayer } from "../../core/models/managed-layer.model";
 
 export class CameraChangedEvent {
   public isOrthographicCamera: boolean = false;
@@ -17,13 +16,18 @@ export class MainView3DService {
   private _orthographicCamera!: OrthographicCamera;
   private _clock: Clock = new Clock();
   private _onCameraChanged = new Subject<CameraChangedEvent>();
-  private _scene!: Scene;
-  onCameraChanged$ = this._onCameraChanged.asObservable();
+  private _viewReadySubject = new Subject<MainView3DService>();
+  private _destroy = new Subject<void>();
+
+  viewReady$ = this._viewReadySubject.asObservable().pipe(takeUntil(this._destroy));
+  onCameraChanged$ = this._onCameraChanged.asObservable().pipe(takeUntil(this._destroy));
+  destroy$ = this._destroy.asObservable();
+  scene!: Scene;
   activeCamera!: Camera;
   renderer!: WebGLRenderer;
 
   get object3Ds(): Object3D[] {
-    return this._scene.children;
+    return this.scene.children;
   }
 
   get controls(): MapControls {
@@ -31,11 +35,6 @@ export class MainView3DService {
   }
 
   constructor(injector: Injector) {
-  }
-
-  getScene(caller: any): Scene | undefined {
-    if (caller instanceof ManagedLayer) return this._scene;
-    return undefined;
   }
 
   switchCamera() {
@@ -73,10 +72,10 @@ export class MainView3DService {
   }
 
   init(threeContainer: ElementRef): void {
-    this._scene = new Scene();
-    this._scene.background = new Color(0x222222);
+    this.scene = new Scene();
+    this.scene.background = new Color(0x222222);
 
-    this._scene.add(new AmbientLight(0xaaaaaa));
+    this.scene.add(new AmbientLight(0xaaaaaa));
 
     const light = new SpotLight(0xffffff, 10000);
     light.position.set(0, 25, 50);
@@ -88,7 +87,7 @@ export class MainView3DService {
     light.shadow.mapSize.width = 1024;
     light.shadow.mapSize.height = 1024;
 
-    this._scene.add(light);
+    this.scene.add(light);
 
     this.renderer = new WebGLRenderer();
     const container = threeContainer.nativeElement;
@@ -113,6 +112,12 @@ export class MainView3DService {
 
     this._initGrid();
     this._animate();
+    this._viewReadySubject.next(this);
+  }
+
+  dispose() {
+    this._destroy.next();
+    this._destroy.complete();
   }
 
   private _initControl(cameraType: string) {
@@ -122,6 +127,8 @@ export class MainView3DService {
       controls.dampingFactor = 0.75;
       controls.screenSpacePanning = true;
       controls.minDistance = -Infinity;
+      controls.mouseButtons.LEFT = null;
+      controls.mouseButtons.MIDDLE = MOUSE.PAN;
       if (cameraType === OrthographicCamera.name) {
         controls.enableRotate = false;
       }
@@ -135,10 +142,10 @@ export class MainView3DService {
     const gridHelper = new GridHelper(size, divisions);
     gridHelper.rotation.x = Math.PI / 2;
     gridHelper.position.z = 0;
-    this._scene.add(gridHelper);
+    this.scene.add(gridHelper);
 
     const axesHelper = new AxesHelper(1);
-    this._scene.add(axesHelper);
+    this.scene.add(axesHelper);
   }
 
   private _onWindowResize(container: ElementRef) {
@@ -153,6 +160,6 @@ export class MainView3DService {
     requestAnimationFrame(() => this._animate());
     const delta = this._clock.getDelta();
     this._controlsMap.forEach(kvp => kvp.update(delta));
-    this.renderer.render(this._scene, this.activeCamera);
+    this.renderer.render(this.scene, this.activeCamera);
   }
 }

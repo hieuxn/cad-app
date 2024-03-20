@@ -12,7 +12,7 @@ export class DrawPolyLineCommand extends MousePlacementCommand {
   userData: Record<string, string> = {};
 
   protected override onInit() {
-    this.finishCommand = ContextMenuGenericCommand.Create('Finish Polyline', (_) => {
+    this.finishCommand = ContextMenuGenericCommand.create('Finish Polyline', (_) => {
       this.isDrawingFinished = this.forceFinish = true;
       this.mouseLocations.length = this.mouseLocations.length - 1;
       this.onMouseClick(this.mouseLocations[this.mouseLocations.length - 1]);

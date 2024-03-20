@@ -4,7 +4,7 @@ import { AfterViewInit, Component, Injector } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { Subscription } from 'rxjs';
 import { Object3D } from 'three';
-import { LayerService } from '../../../shared/services/layer.service';
+import { ObjectSelectionService } from '../../../shared/services/object-selection.service';
 import { SettingsService } from '../../../shared/services/settings.service';
 import { SidebarService } from '../../../shared/services/sidebar.service';
 import { DrawingToolbarComponent } from './drawing-toolbar/drawing-toolbar.component';
@@ -35,15 +35,17 @@ export class SidebarComponent implements AfterViewInit {
   private _settingsService: SettingsService
   private _subscription = new Subscription();
   private _sidebarService: SidebarService;
+  private _selectionService: ObjectSelectionService;
 
   constructor(private _injector: Injector) {
     this._settingsService = _injector.get(SettingsService);
     this._sidebarService = _injector.get(SidebarService);
+    this._selectionService = _injector.get(ObjectSelectionService);
     this._sidebarService.init(this);
   }
 
   ngAfterViewInit(): void {
-    const sub = this._injector.get(LayerService).activeLayer.objUtils.observable$.subscribe(item => {
+    const sub = this._selectionService.observable$.subscribe(item => {
       this.selectedObject = [item];
     });
     this._subscription.add(sub);

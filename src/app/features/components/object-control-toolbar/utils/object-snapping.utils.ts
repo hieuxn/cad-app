@@ -1,5 +1,5 @@
 import { Box2, Line, Object3D, Vector2, Vector3 } from "three";
-import { QuadTree } from "../models/quad-tree.model";
+import { QuadTree } from "../../../../core/models/quad-tree.model";
 
 export class SnapData extends Vector2 {
   constructor(public parent: Object3D, x?: number, y?: number) {
@@ -7,7 +7,7 @@ export class SnapData extends Vector2 {
   }
 }
 
-export class ObjectSnapping {
+export class ObjectSnappingUtils {
   // TODO: bounding box detection
   private _maxSize: number = 500; // m
   private _capacity: number = 10;

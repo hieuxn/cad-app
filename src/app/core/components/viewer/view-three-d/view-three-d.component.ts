@@ -23,6 +23,7 @@ export class ViewThreeDComponent implements AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.mainView3DService.dispose();
   }
 
   ngAfterViewInit(): void {

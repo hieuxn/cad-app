@@ -1,5 +1,6 @@
 import { NgFor, NgIf } from '@angular/common';
 import { AfterViewInit, Component, HostListener } from '@angular/core';
+import { MatMenuModule } from '@angular/material/menu';
 import { Subject, Subscription, debounceTime } from 'rxjs';
 import { ContextMenuCommandBase } from '../../../shared/commands/context-menu-command-base';
 import { ContextMenuService } from '../../../shared/services/context-menu.service';
@@ -7,7 +8,7 @@ import { ContextMenuService } from '../../../shared/services/context-menu.servic
 @Component({
   selector: 'app-context-menu',
   standalone: true,
-  imports: [NgIf, NgFor],
+  imports: [NgIf, NgFor, MatMenuModule],
   templateUrl: './context-menu.component.html',
   styleUrl: './context-menu.component.scss'
 })
@@ -24,9 +25,9 @@ export class ContextMenuComponent implements AfterViewInit {
   constructor(
     private _contextMenuService: ContextMenuService) {
   }
-  
+
   ngAfterViewInit(): void {
-    this._contextMenuService.inject(this);
+    this._contextMenuService.register(this);
   }
 
   open(event: MouseEvent, commands: ContextMenuCommandBase[]) {

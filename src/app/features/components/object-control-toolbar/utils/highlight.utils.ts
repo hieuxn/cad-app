@@ -1,5 +1,5 @@
 import { LineLoop, MeshBasicMaterial, Object3D, RingGeometry, Vector2, Vector3 } from "three";
-import { LayerService } from "../../shared/services/layer.service";
+import { LayerService } from "../../../../shared/services/layer.service";
 
 export class HighLightUtils {
   readonly radius: number = 0.2;

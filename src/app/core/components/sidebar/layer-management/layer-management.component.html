@@ -6,8 +6,8 @@
 	</div>
 	<ul id="bg">
 		<li *ngFor="let layer of layers">
-			<button mat-flat-button [color]="layer.visible ? 'basic': 'primary'" (click)="toggleLayerVisibility(layer.id)">
-				{{layer.visible ? 'Hide' : 'Show'}}
+			<button mat-flat-button [color]="layer.isVisible ? 'basic': 'primary'" (click)="toggleLayerVisibility(layer.id)">
+				{{layer.isVisible ? 'Hide' : 'Show'}}
 			</button>
 			<button mat-flat-button [color]="layer.active ? 'primary' : 'basic'" (click)="setActiveLayer(layer.id)">
 				{{layer.active ? 'Active' : 'Set Active'}}

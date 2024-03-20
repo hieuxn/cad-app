@@ -1,18 +1,18 @@
 import { Injector } from '@angular/core';
 import { Group, Layers, Line, LineLoop, Mesh, Object3D, Scene } from 'three';
+import { ObjectSnappingUtils } from '../../features/components/object-control-toolbar/utils/object-snapping.utils';
 import { LayerService } from '../../shared/services/layer.service';
 import { CameraChangedEvent, MainView3DService } from '../../shared/services/main-view-3d.service';
-import { ObjectManipulation } from '../utils/object-manipulation.utils';
 
 export class ManagedLayer {
 	id: number;
 	name: string;
 	elevation: number;
 	active: boolean = false;
-	visible: boolean = true;
+	isVisible: boolean = true;
 
 	objects: Map<string, Object3D> = new Map<string, Object3D>();
-	objUtils: ObjectManipulation;
+	objUtils: ObjectSnappingUtils;
 	private _layers!: Layers;
 	private _layerService: LayerService;
 	private _scene: Scene;
@@ -32,11 +32,11 @@ export class ManagedLayer {
 		this.name = name;
 		this.elevation = elevation;
 		const mainViewService = injector.get(MainView3DService);
-		this._scene = mainViewService.getScene(this)!;
+		this._scene = mainViewService.scene!;
 		this._layers = mainViewService.activeCamera.layers;
 		mainViewService.onCameraChanged$.subscribe(this._onCameraChanged.bind(this));
 		this._layerService = injector.get(LayerService);
-		this.objUtils = new ObjectManipulation(injector);
+		this.objUtils = new ObjectSnappingUtils();
 	}
 
 	private _onCameraChanged(event: CameraChangedEvent) {
@@ -132,10 +132,10 @@ export class ManagedLayer {
 
 	toggleVisibility(): void {
 		if (this._layers.isEnabled(this.id)) {
-			this.visible = false;
+			this.isVisible = false;
 			this._layers.disable(this.id);
 		} else {
-			this.visible = true;
+			this.isVisible = true;
 			this._layers.enable(this.id);
 		}
 	}

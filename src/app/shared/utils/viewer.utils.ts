@@ -1,6 +1,6 @@
 import { Subject, debounceTime, tap } from "rxjs";
-import { CameraChangedEvent, MainView3DService } from "../../shared/services/main-view-3d.service";
-import { ViewNavigatorComponent } from "../components/viewer/view-navigator/view-navigator.component";
+import { ViewNavigatorComponent } from "../../core/components/viewer/view-navigator/view-navigator.component";
+import { CameraChangedEvent, MainView3DService } from "../services/main-view-3d.service";
 
 export class ViewSyncUtils {
   private _mainView3D!: MainView3DService;

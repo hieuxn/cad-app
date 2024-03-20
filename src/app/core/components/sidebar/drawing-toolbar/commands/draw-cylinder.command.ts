@@ -1,5 +1,4 @@
 import { LineLoop, Mesh, Object3D, Vector3 } from "three";
-import { ContextMenuCommandBase } from "../../../../../shared/commands/context-menu-command-base";
 import { MousePlacementCommand } from "../../../../../shared/commands/mouse-placement.command";
 
 export class DrawCylinderCommand extends MousePlacementCommand {
@@ -7,7 +6,6 @@ export class DrawCylinderCommand extends MousePlacementCommand {
   color: number = 0x8888FF;
   userData: Record<string, string | number> = { 'height': 1 };
   private _forceFinish: boolean = false;
-  private _finishCommand!: ContextMenuCommandBase;
   private _defaultRadius = 0.1; //m
   private _defaultLength = 1;//m
 
@@ -45,14 +43,6 @@ export class DrawCylinderCommand extends MousePlacementCommand {
 
   protected override onMenuContextOpen(mouseEvent: MouseEvent): void {
     super.onMenuContextOpen(mouseEvent);
-
-    if (this.mouseLocations.length <= 2) {
-      this._finishCommand.isVisible = false;
-    }
-    else {
-      this._finishCommand.isVisible = true;
-    }
-
     this.contextMenuService.open(mouseEvent, this.contextMenuCommmands);
   }
 }

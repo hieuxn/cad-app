@@ -8,10 +8,10 @@ import { Group, Object3D } from 'three';
 import { AutofocusDirective } from '../../../../shared/directives/auto-focus.directive';
 import { TitleSpacingPipe } from '../../../../shared/pipes/title-spacing/title-spacing.pipe';
 import { FamilyCreatorService } from '../../../../shared/services/family-creator/family-creator.service';
-import { LayerService } from '../../../../shared/services/layer.service';
+import { ObjectSelectionService } from '../../../../shared/services/object-selection.service';
 import { SidebarService } from '../../../../shared/services/sidebar.service';
 import { ThreeObjectCreationService } from '../../../../shared/services/three-object-creation.service';
-import { ThreeUtils } from '../../../utils/three.utils';
+import { ThreeUtils } from '../../../../shared/utils/three.utils';
 
 export interface ObjectData {
   id: number;
@@ -35,6 +35,7 @@ export class ObjectInformationComponent implements AfterViewInit {
   private _objectCreatorService: ThreeObjectCreationService;
   private _familyCreatorService: FamilyCreatorService;
   private _threeUtils = new ThreeUtils();
+  private _selectionService: ObjectSelectionService;
 
   get rows(): FormArray {
     return this.tableForm.get('rows') as FormArray;
@@ -45,11 +46,12 @@ export class ObjectInformationComponent implements AfterViewInit {
     this._formBuilder = injector.get(FormBuilder);
     this._objectCreatorService = injector.get(ThreeObjectCreationService);
     this._familyCreatorService = injector.get(FamilyCreatorService);
+    this._selectionService = injector.get(ObjectSelectionService);
     this.tableForm = this._formBuilder.group({ rows: this._formBuilder.array([]) });
   }
 
   ngAfterViewInit(): void {
-    const sub = this.injector.get(LayerService).activeLayer.objUtils.observable$.subscribe(item => {
+    const sub = this._selectionService.observable$.subscribe(item => {
       this.tableForm = this._formBuilder.group({ rows: this._formBuilder.array([]) });
       this._buildForm(item);
       if (this.rows.length > 0) this._sidebarService.selectTab('info', true);

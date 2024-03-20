@@ -1,81 +1,62 @@
 import { Injectable, Injector } from '@angular/core';
-import { Box2, Object3D, OrthographicCamera, PerspectiveCamera, Scene, Vector2, Vector3 } from 'three';
+import { Subject } from 'rxjs';
+import { Box2, OrthographicCamera, PerspectiveCamera, Vector2, Vector3 } from 'three';
 import { ManagedLayer } from '../../core/models/managed-layer.model';
-import { HighLightUtils } from '../../core/utils/highlight.utils';
+import { ThreeViewLifecycleBase } from '../../core/models/three-view-ready.model';
+import { HighLightUtils } from '../../features/components/object-control-toolbar/utils/highlight.utils';
 import { ContextMenuCommandBase } from '../commands/context-menu-command-base';
 import { ContextMenuGenericCommand } from '../commands/context-menu-generic-command';
 import { ContextMenuService } from './context-menu.service';
-import { FamilyCreatorService } from './family-creator/family-creator.service';
 import { MainView3DService } from './main-view-3d.service';
 import { SINGLETON_MOUSE_SERVICE_TOKEN } from './mouse.service';
 
 @Injectable({ providedIn: 'root' })
-export class LayerService {
-	activeLayer!: ManagedLayer;
-	highlightUtils: HighLightUtils;
-
+export class LayerService extends ThreeViewLifecycleBase {
 	private _layers: ManagedLayer[] = [];
 	private _idCounter: number = 1; // start from 1, odd for 2D, event for 3D
-	private _mainViewService: MainView3DService;
-	private _contextMenuService: ContextMenuService;
+	private _contextMenuService!: ContextMenuService;
 	private _contextMenuCommands: ContextMenuCommandBase[] = [];
-	private _familyCreatorService: FamilyCreatorService;
+	private _activeLayerSubject = new Subject<ManagedLayer>();
+
+	activeLayer$ = this._activeLayerSubject.asObservable();
+	activeLayer!: ManagedLayer;
+	highlightUtils!: HighLightUtils;
 
 	get layers(): ManagedLayer[] {
 		return this._layers;
 	}
 
-	constructor(private _injector: Injector) {
-		this._mainViewService = _injector.get(MainView3DService);
-		this._contextMenuService = _injector.get(ContextMenuService);
+	constructor(injector: Injector) {
+		super(injector);
+	}
+
+	protected override afterThreeViewReady(afterThreeViewReady: MainView3DService) {
+		this.subscription.add(this._activeLayerSubject);
+
+		this._contextMenuService = this.injector.get(ContextMenuService);
 		this.highlightUtils = new HighLightUtils(this);
-		this._familyCreatorService = _injector.get(FamilyCreatorService);
 		this._initContextMenuCommands();
 	}
 
 	private _initContextMenuCommands() {
-		const mouseService = this._injector.get(SINGLETON_MOUSE_SERVICE_TOKEN);
+		const mouseService = this.injector.get(SINGLETON_MOUSE_SERVICE_TOKEN);
 		mouseService.mouseContextMenu$.subscribe(this._onMenuContextOpening.bind(this));
 		let subscription = mouseService.mouseMove$.subscribe(this._onMouseMove.bind(this));
 
-		const snappingCommand = ContextMenuGenericCommand.Create('Enable Point Snapping', (event) => {
+		const snappingCommand = ContextMenuGenericCommand.create('Enable Point Snapping', (event) => {
 			snappingCommand.isVisible = false;
 			unSnappingCommand.isVisible = true;
 			subscription = mouseService.mouseMove$.subscribe(this._onMouseMove.bind(this));
 		}, false);
 
-		const unSnappingCommand = ContextMenuGenericCommand.Create('Disable Point Snapping', (event) => {
+		const unSnappingCommand = ContextMenuGenericCommand.create('Disable Point Snapping', (event) => {
 			snappingCommand.isVisible = true;
 			unSnappingCommand.isVisible = false;
 			subscription.unsubscribe();
 		});
 
-		const deleteCommand = ContextMenuGenericCommand.Create('Delete', (event) => {
-			if (this.activeLayer.objUtils.selectedObjects.size === 0) return;
-			for (const [obj, material] of this.activeLayer!.objUtils.selectedObjects.values()) {
-				let parent = obj;
-				while (parent.parent && !(parent.parent instanceof Scene)) {
-					parent = parent.parent;
-				}
-				this.activeLayer.removeObjects(parent);
-			}
-		}, false);
-
-		const createFamilyCommand = ContextMenuGenericCommand.Create('Create Family', (event) => {
-			if (this.activeLayer.objUtils.selectedObjects.size === 0) return;
-			const group: Object3D[] = [];
-			for (const [obj, _] of this.activeLayer!.objUtils.selectedObjects.values()) {
-				group.push(obj);
-			}
-
-			this.activeLayer!.objUtils.deSelectAll();
-			this._familyCreatorService.openFamilyCreatorDialog(group);
-		}, false);
-
 		this._contextMenuCommands.push(snappingCommand);
 		this._contextMenuCommands.push(unSnappingCommand);
-		this._contextMenuCommands.push(deleteCommand);
-		this._contextMenuCommands.push(createFamilyCommand);
 	}
 
 	private _onMouseMove(event: MouseEvent) {
@@ -98,10 +79,6 @@ export class LayerService {
 	}
 
 	private _onMenuContextOpening(event: MouseEvent) {
-		const deleteCommand = this._contextMenuCommands[2];
-		const createFamilyCommand = this._contextMenuCommands[3];
-
-		deleteCommand.isVisible = createFamilyCommand.isVisible = this.activeLayer!.objUtils.selectedObjects.size > 0;
 		this._contextMenuService.open(event, this._contextMenuCommands);
 	}
 
@@ -111,12 +88,13 @@ export class LayerService {
 		if (activeLayer) {
 			activeLayer.active = true;
 			this.activeLayer = activeLayer;
+			this._activeLayerSubject.next(activeLayer);
 		}
 	}
 
 	addLayer(name: string, elevation: number): void {
-		this._mainViewService.activeCamera.layers.enable(this._idCounter);
-		const layer = new ManagedLayer(this._injector, this._idCounter, name, elevation);
+		this.mainView3DService.activeCamera.layers.enable(this._idCounter);
+		const layer = new ManagedLayer(this.injector, this._idCounter, name, elevation);
 		this._layers.push(layer);
 		this._idCounter += 2;
 	}
@@ -134,15 +112,15 @@ export class LayerService {
 
 	getMouseNDC(event: MouseEvent): Vector2 {
 		const mouse = new Vector2();
-		mouse.x = (event.clientX / this._mainViewService.renderer.domElement.clientWidth) * 2 - 1;
-		mouse.y = -(event.clientY / this._mainViewService.renderer.domElement.clientHeight) * 2 + 1;
+		mouse.x = (event.clientX / this.mainView3DService.renderer.domElement.clientWidth) * 2 - 1;
+		mouse.y = -(event.clientY / this.mainView3DService.renderer.domElement.clientHeight) * 2 + 1;
 		return mouse;
 	}
 
 	convertMouseEventToWorldSpace(event: MouseEvent): Vector3 {
 		const mouseNDC = this.getMouseNDC(event);
 		const z = this.activeLayer?.elevation ?? 0;
-		let activeCamera = this._mainViewService.activeCamera;
+		let activeCamera = this.mainView3DService.activeCamera;
 
 		if (activeCamera instanceof OrthographicCamera) {
 			const tempZ = (activeCamera.near + activeCamera.far) / (activeCamera.near - activeCamera.far);

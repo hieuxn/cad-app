@@ -6,7 +6,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSliderModule } from '@angular/material/slider';
 import { Group, Object3D } from 'three';
-import { ThreeUtils } from '../../../../utils/three.utils';
+import { ThreeUtils } from '../../../../../shared/utils/three.utils';
 @Component({
   selector: 'app-family-creator-dialog',
   standalone: true,
