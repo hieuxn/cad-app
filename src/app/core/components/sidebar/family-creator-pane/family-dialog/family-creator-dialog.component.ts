@@ -32,7 +32,7 @@ export class FamilyCreatorDialogComponent {
     const group = new Group();
     group.name = name;
     this.objects.forEach(obj => {
-      const parent = this._threeUtils._getParentGroup(obj);
+      const parent = this._threeUtils.getParentGroup(obj);
       if (!parent) return;
 
       group.userData = { ...parent.userData, ...group.userData };

@@ -1,6 +1,7 @@
 import { Component, Injector } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { AcceptFilesDirective } from '../../../../shared/directives/accept-file.directive';
 import { FileConveterService } from '../../../../shared/services/file-converter.service';
 import { LayerService } from '../../../../shared/services/layer.service';
 import { MainView3DService } from '../../../../shared/services/main-view-3d.service';
@@ -8,7 +9,7 @@ import { MainView3DService } from '../../../../shared/services/main-view-3d.serv
 @Component({
   selector: 'app-file-management',
   standalone: true,
-  imports: [MatButtonModule],
+  imports: [MatButtonModule, AcceptFilesDirective],
   templateUrl: './file-management.component.html',
   styleUrl: './file-management.component.scss'
 })

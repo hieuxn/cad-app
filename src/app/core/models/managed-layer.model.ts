@@ -1,8 +1,9 @@
 import { Injector } from '@angular/core';
-import { Group, Layers, Line, LineLoop, Mesh, Object3D, Scene } from 'three';
+import { Group, Layers, Line, LineLoop, Object3D, Scene } from 'three';
 import { ObjectSnappingUtils } from '../../features/components/object-control-toolbar/utils/object-snapping.utils';
 import { LayerService } from '../../shared/services/layer.service';
 import { CameraChangedEvent, MainView3DService } from '../../shared/services/main-view-3d.service';
+import { ThreeUtils } from '../../shared/utils/three.utils';
 
 export class ManagedLayer {
 	id: number;
@@ -16,11 +17,11 @@ export class ManagedLayer {
 	private _layers!: Layers;
 	private _layerService: LayerService;
 	private _scene: Scene;
+	private _threeUtils = new ThreeUtils();
 	private _is3DObjectMap: Map<string, boolean> = new Map<string, boolean>([
 		[Line.name, false],
 		[LineLoop.name, false],
 		[Group.name, false],
-		[Mesh.name, true],
 	])
 
 	get object3Ds(): Object3D[] {
@@ -62,7 +63,7 @@ export class ManagedLayer {
 	}
 
 	private _setLayer(object: Object3D, id: number) {
-		const offset = (this._is3DObjectMap.get(object.type) || false) ? 1 : 0;
+		const offset = this._threeUtils.getSetBitPositions(object.layers.mask)[0];
 		object.layers.set(id + offset);
 		if (object.children.length > 0) {
 			object.children.forEach(c => this._setLayer(c, id));

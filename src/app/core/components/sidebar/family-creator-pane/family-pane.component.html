@@ -1,0 +1,13 @@
+<button mat-raised-button color="accent" (click)="fileInput.click()">
+  Import Model as Family
+</button>
+<input type="file" #fileInput hidden (change)="importFamily($event)" appAcceptFiles>
+
+<div [style.padding-top.px]="10">Family List</div>
+
+<div class="toolbar">
+  @for (family of familyMap; track family[1].name ; let even = $even ) {
+  <button mat-flat-button [color]="even ? 'primary': 'accent'"
+    (click)="this.execute(family)">{{family[1].name}}</button>
+  }
+</div>

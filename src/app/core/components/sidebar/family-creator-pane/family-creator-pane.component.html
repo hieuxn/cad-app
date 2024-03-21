@@ -1,6 +1,0 @@
-<div>Family List</div>
-<div class="toolbar">
-  @for (family of familyMap; track family[1].name ; let even = $even ) {
-  <button mat-flat-button [color]="even ? 'primary': 'accent'" (click)="this.execute(family)">{{family[1].name}}</button>
-  }
-</div>

@@ -8,7 +8,7 @@ import { ObjectSelectionService } from '../../../shared/services/object-selectio
 import { SettingsService } from '../../../shared/services/settings.service';
 import { SidebarService } from '../../../shared/services/sidebar.service';
 import { DrawingToolbarComponent } from './drawing-toolbar/drawing-toolbar.component';
-import { FamilyCreatorPaneComponent } from './family-creator-pane/family-creator-pane.component';
+import { FamilyCreatorPaneComponent } from './family-creator-pane/family-pane.component';
 import { FileManagementComponent } from './file-management/file-management.component';
 import { LayerManagementComponent } from './layer-management/layer-management.component';
 import { ObjectInformationComponent } from './object-information/object-information.component';

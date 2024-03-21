@@ -59,16 +59,16 @@ export class ObjectInformationComponent implements AfterViewInit {
   }
 
   private _buildForm(object: Object3D): void {
-    const obj = this._threeUtils._getParentGroup(object);
+    const obj = this._threeUtils.getParentGroup(object);
     const data = Object.entries(obj?.userData ?? {})
     let index = 1;
     data.forEach(row => {
-      if (row[1] instanceof Function || row[1] instanceof Object3D) return;
+      // if (row[1] instanceof Function || row[1] instanceof Object3D) return;
       this.rows.push(
         this._formBuilder.group({
           id: [index++],
           name: [row[0]],
-          value: [row[0] === 'color' ? '#' + row[1] : row[1]],
+          value: [row[0] === 'color' ? '#' + row[1].toString(16) : row[1]],
           object: obj,
         })
       );
@@ -80,10 +80,6 @@ export class ObjectInformationComponent implements AfterViewInit {
     this.editingIndex = rowIndex;
     this._originalValues.set(rowIndex, value);
   }
-
-  // format(row: AbstractControl<any, any>) {
-  //   return row.get('name')?.value === 'color' ? '#' + row.get('value')?.value.toString(16) : row.get('value')?.value;
-  // }
 
   private _stopEdit(rowIndex: number): void {
     this.editingIndex = null;
@@ -97,7 +93,7 @@ export class ObjectInformationComponent implements AfterViewInit {
     const group = row.get('object')?.value as Group || null;
     if (undefined === name || undefined === value || null === group) return;
 
-    const parent = this._threeUtils._getParentGroup(group);
+    const parent = this._threeUtils.getParentGroup(group);
 
     const parsed = parseFloat(value);
     value = isNaN(parsed) ? value : parsed;
@@ -109,12 +105,12 @@ export class ObjectInformationComponent implements AfterViewInit {
 
       for (const familyInstances of currentInstances) {
         familyInstances.userData[name] = value;
-        this._objectCreatorService.cylinder.update(familyInstances)
+        this._objectCreatorService.update(familyInstances)
       }
     }
     else {
       group.userData[name] = value;
-      this._objectCreatorService.cylinder.update(group)
+      this._objectCreatorService.update(group)
     }
   }
 

@@ -24,6 +24,7 @@ export class MaterialUtils {
 
     const mat = ltype === 'shape' ? new MeshBasicMaterial({ side: DoubleSide }) :
       (ltype === 'line' ? new LineBasicMaterial() : this.createDashedMaterial(context, entity));
+    console.log(ltype);
 
     mat.color.setHex(color);
     mat.name = key;
@@ -33,8 +34,8 @@ export class MaterialUtils {
   }
 
   private createDashedMaterial(context: DxfParserContext, entity: EntityCommons) {
-    let gapSize = 4;
-    let dashSize = 4;
+    let gapSize = 0.004;
+    let dashSize = 0.004;
 
     let linetype;
     for (const ltype of context.dxfObject.tables.lType.records) {
@@ -47,11 +48,10 @@ export class MaterialUtils {
     if (linetype) {
       const patternLength = (linetype.patternLength || 0);
       const pattern = linetype.elements || [];
-      dashSize = pattern && patternLength > 0 ? Math.max(...pattern.map(e => e.length)) : 4;
-      gapSize = pattern && patternLength > 0 ? pattern.map(e => e.length === -1).length : 4;
+      dashSize = pattern && patternLength > 0 ? context.fixLength(Math.max(...pattern.map(e => e.length))) : 0.004;
+      gapSize = pattern && patternLength > 0 ? context.fixLength(pattern.map(e => e.length === -1).length) : 0.004;
     }
-
-    dashSize = dashSize === 0 ? 4 : dashSize;
+    else return new LineBasicMaterial();
 
     return new LineDashedMaterial({ gapSize: gapSize, dashSize: dashSize });
   }

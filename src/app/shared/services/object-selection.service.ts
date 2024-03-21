@@ -4,6 +4,7 @@ import THREE, { Material, MeshStandardMaterial, Object3D, OrthographicCamera, Pe
 import { SelectionBox, SelectionHelper } from "three/examples/jsm/Addons.js";
 import { ManagedLayer } from "../../core/models/managed-layer.model";
 import { ThreeViewLifecycleBase } from "../../core/models/three-view-ready.model";
+import { ThreeUtils } from "../utils/three.utils";
 import { LayerService } from "./layer.service";
 import { MainView3DService } from "./main-view-3d.service";
 import { MouseService, SINGLETON_MOUSE_SERVICE_TOKEN } from "./mouse.service";
@@ -22,6 +23,8 @@ export class ObjectSelectionService extends ThreeViewLifecycleBase {
   private _raycaster: Raycaster = new Raycaster();
   private _idOffset: number = 0;
   private _selectionBoxes = new Map<string, SelectionBox>()
+  private _isLeftClicked = false;
+  private _threeUtils = new ThreeUtils();
 
   observable$ = this._subject.asObservable();
   selectedObjects: Map<string, [Object3D, Material]> = new Map<string, [Object3D, Material]>();
@@ -63,8 +66,8 @@ export class ObjectSelectionService extends ThreeViewLifecycleBase {
     });
     this.subscription.add(sub);
 
-    this._selectedMaterial = new MeshStandardMaterial({ depthTest: false, depthWrite: false, emissive: 0x00FF00, color: 0x00FF00, emissiveIntensity: 0.8 });
-    this._hoveredMaterial = new MeshStandardMaterial({ depthTest: false, depthWrite: false, emissive: 0xF44A3E, color: 0xF44A3E, emissiveIntensity: 0.8 });
+    this._selectedMaterial = new MeshStandardMaterial({ depthTest: true, depthWrite: true, emissive: 0x00FF00, color: 0x00FF00, emissiveIntensity: 0.9 });
+    this._hoveredMaterial = new MeshStandardMaterial({ depthTest: true, depthWrite: true, emissive: 0xF44A3E, color: 0xF44A3E, emissiveIntensity: 0.9 });
 
     this._raycaster.params.Line.threshold = 0.2;
 
@@ -99,17 +102,25 @@ export class ObjectSelectionService extends ThreeViewLifecycleBase {
   }
 
   private _onSelectionBoxDraw(event: MouseEvent) {
-    if (event.button !== 0 ) return;
+    if (event.button !== 0) {
+      this._isLeftClicked = false;
+      return;
+    }
+
     for (const item of this._selectionBox.collection) {
       this.deselect(item);
     }
 
     const mouse = this._layerService.getMouseNDC(event);
     this._selectionBox.startPoint.set(mouse.x, mouse.y, 0.5);
+    this._isLeftClicked = true;
   }
 
   private _onSelectionBoxUpdate(event: MouseEvent) {
-    if (event.button !== 0) return;
+    if (false === this._isLeftClicked) {
+      this._selectionHelper.isDown = false;
+      return;
+    }
     const activeId = this._layerService.activeLayer.id;
     if (this._selectionHelper.isDown) {
 
@@ -151,19 +162,30 @@ export class ObjectSelectionService extends ThreeViewLifecycleBase {
     const objs = this._layerService.activeLayer.object3Ds;
     const intersections = this._raycaster.intersectObjects(objs, true);
 
+    let resetHover = true;
     for (const intersection of intersections) {
-      const obj = intersection.object;
-      if (!obj.layers.isEnabled(activeId + this._idOffset)) continue;
-      if ('material' in obj
-        && obj.material instanceof Material
-        && obj.material !== this._hoveredMaterial
-        && undefined === this._hoveredObjects.get(obj.uuid)) {
+      const parent = this._threeUtils.getParentGroup(intersection.object);
+      if (!parent) continue;
+      // if (!obj.layers.isEnabled(activeId + this._idOffset)) continue;
+      for (const obj of this._flatChildren(parent)) {
+        if ('material' in obj
+          && obj.material instanceof Material
+          && obj.material !== this._hoveredMaterial
+          && obj.material !== this._selectedMaterial
+          && undefined === this._hoveredObjects.get(obj.uuid)) {
 
-        const originalMaterial = this.selectedObjects.get(obj.uuid)?.[1] || obj.material.clone();
-        this._hoveredObjects.set(obj.uuid, [obj, originalMaterial]);
-        obj.material = this._hoveredMaterial;
-        return this._hoveredObjects.size < 2;
+          if (resetHover) {
+            resetHover = false;
+            this._unhover();
+          }
+
+          const originalMaterial = this.selectedObjects.get(obj.uuid)?.[1] || obj.material.clone();
+          this._hoveredObjects.set(obj.uuid, [obj, originalMaterial]);
+          obj.material = this._hoveredMaterial;
+          // console.log('hover');
+        }
       }
+      return true;
     }
 
     return intersections.length > 0;
@@ -173,6 +195,7 @@ export class ObjectSelectionService extends ThreeViewLifecycleBase {
     for (const [key, [obj, material]] of this._hoveredObjects) {
       if ('material' in obj && obj.material instanceof Material) {
         obj.material = material;
+        // console.log('unhover');
       }
     }
     this._hoveredObjects.clear();
@@ -189,19 +212,32 @@ export class ObjectSelectionService extends ThreeViewLifecycleBase {
     const intersections = this._raycaster.intersectObjects(objs, true);
 
     if (intersections.length > 0) {
-      const obj = intersections[0].object; // Select the first intersected object
+      const parent = this._threeUtils.getParentGroup(intersections[0].object); // Select the first intersected object
+      if (!parent) return;
 
-      if (multiSelect) {
-        if (this.selectedObjects.has(obj.uuid)) this.deselect(obj)
-        else this.select(obj);
-      }
-      else if (this.selectedObjects.has(obj.uuid)) this.deselect(obj)
-      else {
-        this.deselectAll();
-        this.select(obj);
+      let deselectAll = true;
+      for (const obj of this._flatChildren(parent)) {
+        if (multiSelect) {
+          if (this.selectedObjects.has(obj.uuid)) this.deselect(obj)
+          else this.select(obj);
+        }
+        else if (this.selectedObjects.has(obj.uuid)) this.deselect(obj)
+        else {
+          if (deselectAll) {
+            deselectAll = false;
+            this._unhover();
+            this.deselectAll();
+            // console.log('select');
+          }
+          this.select(obj);
+        }
       }
     }
     else this.deselectAll();
+  }
+
+  private _flatChildren(object: Object3D): Object3D[] {
+    return object.children.flatMap(c => this._flatChildren(c).concat(c));
   }
 
   select(obj: Object3D) {
@@ -224,6 +260,7 @@ export class ObjectSelectionService extends ThreeViewLifecycleBase {
   }
 
   deselectAll() {
+    // console.log('deselectAll');
     this.selectedObjects.forEach(([selectedObj, mat], uuid) => {
       if (!('material' in selectedObj && selectedObj.material instanceof Material)) return;
       selectedObj.material = this.selectedObjects.get(uuid)?.[1];

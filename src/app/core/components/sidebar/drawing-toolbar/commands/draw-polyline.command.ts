@@ -53,15 +53,12 @@ export class DrawPolyLineCommand extends MousePlacementCommand {
   }
 
   protected override onMenuContextOpen(mouseEvent: MouseEvent): void {
-    super.onMenuContextOpen(mouseEvent);
-
     if (this.mouseLocations.length <= 2) {
       this.finishCommand.isVisible = false;
     }
     else {
       this.finishCommand.isVisible = true;
     }
-
-    this.contextMenuService.open(mouseEvent, this.contextMenuCommmands);
+    super.onMenuContextOpen(mouseEvent);
   }
 }

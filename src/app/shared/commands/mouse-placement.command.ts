@@ -100,6 +100,7 @@ export abstract class MousePlacementCommand {
   }
 
   protected onMenuContextOpen(mouseEvent: MouseEvent) {
+    this.contextMenuService.open(mouseEvent, this.contextMenuCommmands);
   }
 
   protected isFinished(mouseLocations: Vector3[]): boolean {

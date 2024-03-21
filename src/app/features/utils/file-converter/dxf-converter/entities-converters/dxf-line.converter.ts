@@ -17,8 +17,10 @@ function to3DLine(context: DxfParserContext, line: LineEntity): Line {
   const lineGeometry = new BufferGeometry().setFromPoints(
     [new Vector3(context.fixLength(line.startX), context.fixLength(line.startY), context.fixLength(line.startZ)),
     new Vector3(context.fixLength(line.endX), context.fixLength(line.endY), context.fixLength(line.endZ))]);
+    // const ltype = context.dxfObject.tables.lType.records.find( l => l.name === line.linetypeName)
   const material = context.getMaterial(context, line, line.linetypeName || '');
   const newLine = new Line(lineGeometry, material);
+  newLine.computeLineDistances();
   return newLine;
 }
 

@@ -43,7 +43,7 @@ export class ContextMenuService extends ThreeViewLifecycleBase {
         const deleteCommand = ContextMenuGenericCommand.create('Delete', (event) => {
             if (this._selectionService.selectedObjects.size === 0) return;
             for (const [obj, material] of this._selectionService.selectedObjects.values()) {
-                const parent = this._threeUtils._getParentGroup(obj);
+                const parent = this._threeUtils.getParentGroup(obj);
                 if (!parent) continue;
                 this._layerService.activeLayer.removeObjects(parent);
             }

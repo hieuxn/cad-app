@@ -3,6 +3,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MousePlacementCommand } from '../../../../shared/commands/mouse-placement.command';
 import { LayerService } from '../../../../shared/services/layer.service';
 import { DrawCylinderCommand } from './commands/draw-cylinder.command';
+import { DrawHBeamCommand } from './commands/draw-h-beam.command';
 import { DrawPolyLineCommand } from './commands/draw-polyline.command';
 
 @Component({
@@ -33,7 +34,10 @@ export class DrawingToolbarComponent {
     const cylinder = new DrawCylinderCommand(injector);
     cylinder.userData['blockName'] = 'My Cylinder Family';
 
-    this.commands = [polyline, cylinder];
+    const hbeam = new DrawHBeamCommand(injector);
+    hbeam.userData['blockName'] = 'My HBeam Family';
+
+    this.commands = [polyline, cylinder, hbeam];
   }
 
   execute(drawingCommand: MousePlacementCommand) {

@@ -3,7 +3,7 @@ import { MousePlacementCommand } from "../../../../../shared/commands/mouse-plac
 
 export class DrawCylinderCommand extends MousePlacementCommand {
   override name: string = "Cylinder";
-  color: number = 0x8888FF;
+  color: number = 0xB5B5B5;
   userData: Record<string, string | number> = { 'height': 1 };
   private _forceFinish: boolean = false;
   private _defaultRadius = 0.1; //m
@@ -28,9 +28,9 @@ export class DrawCylinderCommand extends MousePlacementCommand {
     if (mouseLocations.length == 2) {
       this._defaultRadius = mouseLocations[0].distanceTo(mouseLocations[1]);
     }
-    
-    const group = this.objectCreatorService.cylinder.create(this._defaultLength, this._defaultRadius, 32);
-    group.name = this.userData['blockName'] as string;
+
+    const group = this.objectCreatorService.cylinder.create(this._defaultLength, this._defaultRadius, 32, this.color);
+    // group.name = this.userData['blockName'] as string;
 
     const cylinder = group.children[0] as Mesh;
     const spawnPosition = mouseLocations.at(0)!.clone().add(new Vector3(0, 0, this._defaultLength * -0.5));
@@ -43,6 +43,5 @@ export class DrawCylinderCommand extends MousePlacementCommand {
 
   protected override onMenuContextOpen(mouseEvent: MouseEvent): void {
     super.onMenuContextOpen(mouseEvent);
-    this.contextMenuService.open(mouseEvent, this.contextMenuCommmands);
   }
 }

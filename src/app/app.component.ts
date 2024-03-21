@@ -6,7 +6,7 @@ import { ContextMenuComponent } from './core/components/context-menu/context-men
 import { CoordinateDisplayComponent } from './core/components/coordinate-display/coordinate-display.component';
 import { SidebarComponent } from './core/components/sidebar/sidebar.component';
 import { ViewerComponent } from './core/components/viewer/viewer.component';
-import { ObjectControlToolbarModule, getSelectionUtils } from './features/components/object-control-toolbar/object-control-toolbar.module';
+import { ObjectControlToolbarModule } from './features/components/object-control-toolbar/object-control-toolbar.module';
 
 @Component({
   selector: 'app-root',
@@ -19,11 +19,9 @@ import { ObjectControlToolbarModule, getSelectionUtils } from './features/compon
 
 export class AppComponent implements AfterViewInit {
   title: string = 'cad-app';
-  private _selectionUtils: any;
   constructor(private _injector: Injector) {
   }
 
   ngAfterViewInit(): void {
-    this._selectionUtils = getSelectionUtils(this._injector);
   }
 }
