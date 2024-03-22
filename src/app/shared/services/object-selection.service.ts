@@ -23,7 +23,7 @@ export class ObjectSelectionService extends ThreeViewLifecycleBase {
   private _raycaster: Raycaster = new Raycaster();
   private _idOffset: number = 0;
   private _selectionBoxes = new Map<string, SelectionBox>()
-  private _isLeftClicked = false;
+  private _isLeftCicked = false;
   private _threeUtils = new ThreeUtils();
 
   observable$ = this._subject.asObservable();
@@ -76,6 +76,12 @@ export class ObjectSelectionService extends ThreeViewLifecycleBase {
     const camera = this._mainViewService.activeCamera;
 
     this._selectionHelper = new SelectionHelper(renderer, 'selectBox');
+    // const onSelectionStart = this._selectionHelper.onSelectStart;
+    // this._selectionHelper.onSelectStart = (event) => {
+    //   if ((event as MouseEvent).button !== 0) return;
+    //   onSelectionStart(event)
+    // }
+    // this._selectionHelper.onSelectStart.bind(this._selectionHelper);
 
     this._selectionBoxes.set(camera.type, this._selectionBox = new SelectionBox(camera, scene));
 
@@ -103,7 +109,7 @@ export class ObjectSelectionService extends ThreeViewLifecycleBase {
 
   private _onSelectionBoxDraw(event: MouseEvent) {
     if (event.button !== 0) {
-      this._isLeftClicked = false;
+      this._isLeftCicked = false;
       return;
     }
 
@@ -113,13 +119,12 @@ export class ObjectSelectionService extends ThreeViewLifecycleBase {
 
     const mouse = this._layerService.getMouseNDC(event);
     this._selectionBox.startPoint.set(mouse.x, mouse.y, 0.5);
-    this._isLeftClicked = true;
+    this._isLeftCicked = true;
   }
 
   private _onSelectionBoxUpdate(event: MouseEvent) {
-    if (false === this._isLeftClicked) {
-      this._selectionHelper.isDown = false;
-      return;
+    if (false === this._isLeftCicked) {
+      this._selectionHelper.element.style.display = 'none';
     }
     const activeId = this._layerService.activeLayer.id;
     if (this._selectionHelper.isDown) {
