@@ -1,43 +1,49 @@
 import { BoxGeometry, BufferGeometry, Group, Line, LineBasicMaterial, LineDashedMaterial, Mesh, MeshLambertMaterial, Object3D, Vector3 } from "three";
 import { ThreeUtils } from "../../three.utils";
 
+export class HBeamData {
+  constructor(public length: number, public breadth: number, public depth: number, public thickness: number, public space: number, public color: number) {
+  }
+}
+
 export class HBeamCreator {
   readonly name = "H-Beam";
   private _threeUtils = new ThreeUtils();
 
-  create(l: number, b: number, d: number, t: number, s: number, color: number = 0x0000FF): Group {
+  create(data: HBeamData): Group {
+    const { length, breadth, depth, thickness, space, color } = data;
     const group = new Group();
-    const hBeam3D = this._create3DHBeam(l, b, d, t, s, color);
+    const hBeam3D = this._create3DHBeam(length, breadth, depth, thickness, space, color);
     hBeam3D.rotateY(Math.PI * 0.5);
     hBeam3D.rotateZ(Math.PI * 0.5);
-    const hBeam2D = this._draw2DHBeam(l, b, s, color);
+    const hBeam2D = this._draw2DHBeam(length, breadth, space, color);
 
     group.add(hBeam3D);
     group.add(hBeam2D);
     group.name = this.name;
-    group.userData = { length: l, depth: d, breadth: b, thickness: t, space: s, color: color }
+    group.userData = data;
     return group;
   }
 
-  private _create3DHBeam(l: number, b: number, d: number, t: number, s: number, color: number = 0x0000FF): Mesh {
+  private _create3DHBeam(length: number, breadth: number, depth: number, thickness: number, space: number, color: number = 0x0000FF): Mesh {
     const material = new MeshLambertMaterial({ color: color });
     const mesh = new Mesh();
 
-    const flangeHeight = d;
-    const flangeWidth = b;
-    const webHeight = d - 2 * t;
-    const webThickness = s;
-    const flangeThickness = t;
+    const flangeHeight = depth;
+    const flangeWidth = breadth;
+    const webHeight = depth - 2 * thickness;
+    const webThickness = space;
+    const flangeThickness = thickness;
 
     // Create flanges (top and bottom)
-    const flangeGeometry = new BoxGeometry(flangeWidth, flangeThickness, l);
+    const flangeGeometry = new BoxGeometry(flangeWidth, flangeThickness, length);
     const topFlange = new Mesh(flangeGeometry, material);
     const bottomFlange = new Mesh(flangeGeometry, material);
-    topFlange.position.y = (flangeHeight / 2) - t / 2;
-    bottomFlange.position.y = -(flangeHeight / 2) + t / 2;
+    topFlange.position.y = (flangeHeight / 2) - thickness / 2;
+    bottomFlange.position.y = -(flangeHeight / 2) + thickness / 2;
 
     // Create web (middle part)
-    const webGeometry = new BoxGeometry(webThickness, webHeight, l);
+    const webGeometry = new BoxGeometry(webThickness, webHeight, length);
     const web = new Mesh(webGeometry, material);
 
     mesh.add(topFlange);

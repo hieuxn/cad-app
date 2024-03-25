@@ -1,9 +1,11 @@
 import { Injectable, Injector } from "@angular/core";
 import { Object3D } from "three";
 import { ContextMenuCommandBase, ContextMenuGenericCommand } from "../commands/context-menu.command";
+import { CommandActionBase } from "../commands/mouse-placement.command";
 import { ContextMenuComponent } from "../components/context-menu/context-menu.component";
 import { ThreeViewLifecycleBase } from "../models/three-view-ready.model";
 import { ThreeUtils } from "../utils/three.utils";
+import { CommandManagerService } from "./command-manager.service";
 import { FamilyCreatorService } from "./family-creator.service";
 import { LayerService } from "./layer.service";
 import { MainView3DService } from "./main-view-3d.service";
@@ -23,6 +25,7 @@ export class ContextMenuService extends ThreeViewLifecycleBase {
     private _contextMenuWrapper: ContextMenuWrapper = new ContextMenuWrapper();
     private _contextMenuCommands: ContextMenuCommandBase[] = [];
     private _threeUtils = new ThreeUtils();
+    private _commandService!: CommandManagerService;
 
     constructor(injector: Injector) {
         super(injector);
@@ -33,6 +36,7 @@ export class ContextMenuService extends ThreeViewLifecycleBase {
         this._mouseService = this.injector.get(SINGLETON_MOUSE_SERVICE_TOKEN);
         this._familyCreatorService = this.injector.get(FamilyCreatorService);
         this._layerService = this.injector.get(LayerService);
+        this._commandService = this.injector.get(CommandManagerService)
         this._initContextMenuCommands();
     }
 
@@ -41,10 +45,21 @@ export class ContextMenuService extends ThreeViewLifecycleBase {
 
         const deleteCommand = ContextMenuGenericCommand.create('Delete', (event) => {
             if (this._selectionService.selectedObjects.size === 0) return;
+            const parents = new Map<string, Object3D>()
             for (const [obj, material] of this._selectionService.selectedObjects.values()) {
                 const parent = this._threeUtils.getParentGroup(obj);
-                if (!parent) continue;
+                if (!parent || parents.get(parent.uuid)) continue;
+                parents.set(parent.uuid, parent);
                 this._layerService.activeLayer.removeObjects(parent);
+            }
+
+
+            if (parents.size > 0) {
+                this._commandService.addCommand(new CommandActionBase("Delete Object(s)", () => {
+                    parents.forEach(parent => this._layerService.activeLayer.removeObjects(parent));
+                }, () => {
+                    parents.forEach(parent => this._layerService.activeLayer.addObjects(parent));
+                }));
             }
         }, false);
 

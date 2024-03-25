@@ -1,27 +1,35 @@
 import { Group, Object3D, Quaternion, Vector3 } from "three";
-import { MousePlacementCommand } from "./mouse-placement.command";
+import { HBeamData } from "../utils/three-object-creation/creators/h-beam.creator";
+import { CommandActionBase, MousePlacementCommand } from "./mouse-placement.command";
 
 export class DrawHBeamCommand extends MousePlacementCommand {
+
   private _b: number = 1;
   private _d: number = 1;
   private _t: number = 0.1;
   private _s: number = 0.3;
   private _xVector = new Vector3(1, 0, 0);
   private _hBeam!: Group;
+  private _userData!: HBeamData
   override name: string = "H Beam";
   color: number = 0xB2B2B2;
-  userData: Record<string, string> = {};
 
   protected override isFinished(mouseLocations: Vector3[]): boolean {
     super.isFinished(mouseLocations);
     const isFinished = mouseLocations.length > 1;
 
     if (isFinished) {
-      const { length, depth, breadth, thickness, space, color } = this._hBeam.userData;
       this.removeFromScene(this._hBeam);
-      this._hBeam = this.objectCreatorService.hBeam.create(length, breadth, depth, thickness, space, color);
+      this._hBeam = this.objectCreatorService.hBeam.create(this._userData);
       this._translateAndRotate(mouseLocations);
       this.addToScene(this._hBeam);
+
+      const hBeam = this._hBeam;
+      this.commandService.addCommand(new CommandActionBase("Create H Beam", () => {
+        this.addToScene(hBeam);
+      }, () => {
+        this.removeFromScene(hBeam);
+      }))
     }
 
     return isFinished;
@@ -31,7 +39,14 @@ export class DrawHBeamCommand extends MousePlacementCommand {
     if (mouseLocations.length === 1) return this._hBeam = this._createHBeam();
 
     const length = this._calculateLength(mouseLocations);
-    this._hBeam.userData = { length: length, depth: this._d, breadth: this._b, thickness: this._t, space: this._s, color: this.color };
+
+    this._userData.length = length;
+    this._userData.breadth = this._b;
+    this._userData.depth = this._d;
+    this._userData.thickness = this._t;
+    this._userData.space = this._s;
+    this._userData.color = this.color;
+
     this.objectCreatorService.hBeam.temporarilyScale(this._hBeam);
     this._translateAndRotate(mouseLocations);
 
@@ -42,7 +57,8 @@ export class DrawHBeamCommand extends MousePlacementCommand {
 
   private _createHBeam(): Group {
     const length = 1;
-    const group = this.objectCreatorService.hBeam.create(length, this._b, this._d, this._t, this._s, this.color);
+    this._userData = new HBeamData(length, this._b, this._d, this._t, this._s, this.color);
+    const group = this.objectCreatorService.hBeam.create(this._userData);
     return group;
   }
 

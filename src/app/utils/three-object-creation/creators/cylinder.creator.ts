@@ -1,11 +1,17 @@
 import { CylinderGeometry, Group, LineLoop, Mesh, MeshBasicMaterial, MeshLambertMaterial, RingGeometry, Vector3 } from "three";
 import { ThreeUtils } from "../../three.utils";
 
+export class CylinderData {
+  constructor(public depth: number, public radius: number, public radialSegments: number, public color: number) {
+  }
+}
+
 export class CylinderCreator {
   readonly name = "Cylinder";
   private _threeUtils = new ThreeUtils();
 
-  create(depth: number, radius: number, radialSegments: number = 32, color: number = 0x8888FF): Group {
+  create(data: CylinderData): Group {
+    const { depth, radius, radialSegments, color } = data;
     const geometry = new CylinderGeometry(radius, radius, depth, radialSegments);
     geometry.rotateX(Math.PI * 0.5);
     const material = new MeshLambertMaterial({ color: color });
@@ -24,7 +30,7 @@ export class CylinderCreator {
     group.name = this.name;
     group.add(cylinder);
     group.add(circleOutline);
-    group.userData = { 'depth': depth, 'radius': radius, 'radialSegments': radialSegments, 'color': color };
+    group.userData = data;
     return group;
   }
 
@@ -44,7 +50,7 @@ export class CylinderCreator {
     const oldRingRadius = ringGeometry.parameters.innerRadius;
     const ringScale = radius / oldRingRadius;
     circle.scale.set(ringScale, ringScale, circle.scale.z);
-    
+
     return group;
   }
 }

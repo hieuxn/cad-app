@@ -1,6 +1,6 @@
 import { BufferGeometry, Group, Line, LineBasicMaterial, Object3D, Vector3 } from "three";
 import { ContextMenuCommandBase, ContextMenuGenericCommand } from "./context-menu.command";
-import { MousePlacementCommand } from "./mouse-placement.command";
+import { CommandActionBase, MousePlacementCommand } from "./mouse-placement.command";
 
 export class DrawPolyLineCommand extends MousePlacementCommand {
   override name: string = "Draw Polyline";
@@ -42,7 +42,7 @@ export class DrawPolyLineCommand extends MousePlacementCommand {
       mouseLocations[mouseLocations.length - 1] = mouseLocations[0];
       this._reCreatePolyline(mouseLocations)
     }
-    
+
 
     return this._isDrawingFinished = isPolylineClosed;
   }
@@ -73,5 +73,12 @@ export class DrawPolyLineCommand extends MousePlacementCommand {
     this.removeFromScene(this._polyline);
     this._polyline = this._createPolyline(mouseLocations);
     this.addToScene(this._polyline)
+
+    const polyline = this._polyline;
+    this.commandService.addCommand(new CommandActionBase("Create Polyline", () => {
+      this.addToScene(polyline);
+    }, () => {
+      this.removeFromScene(polyline);
+    }))
   }
 }

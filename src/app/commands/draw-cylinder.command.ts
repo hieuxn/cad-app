@@ -1,21 +1,20 @@
 import { Group, Object3D, Vector3 } from "three";
-import { MousePlacementCommand } from "./mouse-placement.command";
+import { CylinderData } from "../utils/three-object-creation/creators/cylinder.creator";
+import { CommandActionBase, MousePlacementCommand } from "./mouse-placement.command";
 
 export class DrawCylinderCommand extends MousePlacementCommand {
-  override name: string = "Cylinder";
+
+  override name: string = "Pile";
   color: number = 0xB5B5B5;
-  userData: Record<string, string | number> = { 'height': 1 };
   private _defaultRadius = 0.1; //m
   private _defaultDepth = 1; //m
   private _defaultRadialSegments = 32;
   private _pile!: Group;
+  private _userData!: CylinderData;
 
-  protected override onInit() {
-    super.onInit();
-  }
-
-  override execute(): void {
+  override execute(): any {
     super.execute();
+    this._userData = new CylinderData(this._defaultDepth, this._defaultRadius, this._defaultRadialSegments, this.color);
   }
 
   protected override isFinished(mouseLocations: Vector3[]): boolean {
@@ -23,21 +22,30 @@ export class DrawCylinderCommand extends MousePlacementCommand {
     const click2Times = mouseLocations.length >= 2;
 
     if (click2Times) {
-      const { depth, radius, radialSegments, color } = this._pile.userData;
       this.removeFromScene(this._pile)
-      this._pile = this.objectCreatorService.cylinder.create(depth, radius, radialSegments, color);;
+      this._pile = this.objectCreatorService.cylinder.create(this._userData);;
       this._translate(mouseLocations);
       this.addToScene(this._pile);
+
+      const pile = this._pile;
+      this.commandService.addCommand(new CommandActionBase("Create Pile", () => {
+        this.addToScene(pile);
+      }, () => {
+        this.removeFromScene(pile);
+      }))
     }
     return click2Times;
   }
 
   protected override onCommandExecute(mouseLocations: Vector3[]): Object3D | null {
-    if (mouseLocations.length === 1) return this._pile = this.objectCreatorService.cylinder.create(this._defaultDepth, this._defaultRadius, this._defaultRadialSegments, this.color);
+    if (mouseLocations.length === 1) return this._pile = this.objectCreatorService.cylinder.create(this._userData);
 
     if (mouseLocations.length === 2) this._defaultRadius = mouseLocations[0].distanceTo(mouseLocations[1]);
 
-    this._pile.userData = { depth: this._defaultDepth, radius: this._defaultRadius, radialSegments: 32, color: this.color };
+    this._userData.depth = this._defaultDepth;
+    this._userData.radius = this._defaultRadius;
+    this._userData.radialSegments = this._defaultRadialSegments;
+    this._userData.color = this.color;
     this.objectCreatorService.cylinder.temporarilyScale(this._pile);
     this._translate(mouseLocations);
 

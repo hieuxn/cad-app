@@ -1,6 +1,5 @@
 import { NgFor, NgIf } from '@angular/common';
 import { AfterViewInit, Component, HostListener } from '@angular/core';
-import { MatMenuModule } from '@angular/material/menu';
 import { Subject, Subscription, debounceTime } from 'rxjs';
 import { ContextMenuCommandBase } from '../../commands/context-menu.command';
 import { ContextMenuService } from '../../services/context-menu.service';
@@ -8,7 +7,7 @@ import { ContextMenuService } from '../../services/context-menu.service';
 @Component({
   selector: 'app-context-menu',
   standalone: true,
-  imports: [NgIf, NgFor, MatMenuModule],
+  imports: [NgIf, NgFor],
   templateUrl: './context-menu.component.html',
   styleUrl: './context-menu.component.scss'
 })

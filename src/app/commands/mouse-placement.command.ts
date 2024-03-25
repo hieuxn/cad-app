@@ -2,12 +2,30 @@ import { KeyValue } from '@angular/common';
 import { Injector } from '@angular/core';
 import { BehaviorSubject, Subject, Subscription } from 'rxjs';
 import { Group, Object3D, Vector3 } from 'three';
+import { CommandManagerService } from '../services/command-manager.service';
 import { ContextMenuService } from '../services/context-menu.service';
 import { CoordinateService } from '../services/coordinate.service';
 import { LayerService } from '../services/layer.service';
 import { MouseService, SINGLETON_MOUSE_SERVICE_TOKEN } from '../services/mouse.service';
 import { ThreeObjectCreationService } from '../services/three-object-creation.service';
 import { ContextMenuCommandBase, ContextMenuGenericCommand } from './context-menu.command';
+
+export abstract class CommandBase {
+  abstract description: string;
+  abstract execute(): void;
+  abstract undo(): void;
+}
+
+export class CommandActionBase implements CommandBase {
+  constructor(public description: string, private _execute: () => void, private _undo: () => void) { }
+  execute(): void {
+    this._execute();
+  }
+
+  undo(): void {
+    this._undo();
+  }
+}
 
 export abstract class MousePlacementCommand {
   abstract name: string;
@@ -23,17 +41,19 @@ export abstract class MousePlacementCommand {
   private _mouseUpCount: number = 0;
   private _coordinateService: CoordinateService;
   private _mouseService: MouseService;
+  protected commandService: CommandManagerService;
 
   constructor(injector: Injector) {
     this._coordinateService = injector.get(CoordinateService);
     this._mouseService = injector.get(SINGLETON_MOUSE_SERVICE_TOKEN);
     this._layerService = injector.get(LayerService);
+    this.commandService = injector.get(CommandManagerService);
     this.contextMenuService = injector.get(ContextMenuService);
     this.objectCreatorService = injector.get(ThreeObjectCreationService);
     this.onInit();
   }
 
-  execute() {
+  execute(): any {
     this._initEvents();
   }
 
@@ -48,7 +68,6 @@ export abstract class MousePlacementCommand {
   }
 
   protected onInit() {
-
     this._coordinateService.gridSnap = true;
     const snappingCommand = ContextMenuGenericCommand.create('Enable snapping to grid', (event) => {
       snappingCommand.isVisible = false;

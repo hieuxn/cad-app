@@ -1,0 +1,34 @@
+<div class="pane">
+  <button mat-flat-button class="pane-item" [disabled]="undoStack.length === 0" (click)="undo()">
+    <mat-icon>undo</mat-icon>
+  </button>
+
+  <mat-menu #undoMenu="matMenu">
+    @for (item of undoStack.slice().reverse(); track item.description; let i = $index){
+    <button mat-menu-item (click)="undoToIndex(i)">
+      <span>{{item.description}}</span>
+    </button>
+    }
+  </mat-menu>
+
+  <button class="pane-item" mat-flat-button [matMenuTriggerFor]="undoMenu" [disabled]="undoStack.length === 0">
+    <mat-icon>more_vert</mat-icon>
+  </button>
+
+
+  <button class="pane-item" mat-flat-button [disabled]="redoStack.length === 0" (click)="redo()">
+    <mat-icon>redo</mat-icon>
+  </button>
+
+  <mat-menu #redoMenu="matMenu">
+    @for (item of redoStack.slice().reverse(); track item.description; let i = $index){
+    <button mat-menu-item (click)="redoToIndex(i)">
+      <span>{{item.description}}</span>
+    </button>
+    }
+  </mat-menu>
+
+  <button class="pane-item" mat-flat-button [matMenuTriggerFor]="redoMenu" [disabled]="redoStack.length === 0">
+    <mat-icon>more_vert</mat-icon>
+  </button>
+</div>

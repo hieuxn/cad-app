@@ -70,6 +70,14 @@ export class ManagedLayer {
 		}
 	}
 
+	private _unsetLayer(object: Object3D) {
+		const offset = this._threeUtils.getSetBitPositions(object.layers.mask)[0] - this.id;
+		object.layers.set(offset);
+		if (object.children.length > 0) {
+			object.children.forEach(c => this._unsetLayer(c));
+		}
+	}
+
 	private _addToQuadTree(objects: Object3D[] | Object3D) {
 		// TODO: Improve code
 		objects = objects instanceof Array ? objects : [objects]
@@ -98,6 +106,7 @@ export class ManagedLayer {
 	removeObjects(objects: Object3D[] | Object3D, useQuadTree: boolean = true): void {
 		objects = objects instanceof Array ? objects : [objects]
 		for (const item of objects) {
+			this._unsetLayer(item);
 			this._scene.remove(item);
 			this.objects.delete(item.uuid);
 			if (useQuadTree) this._removeFromQuadTree(item);
