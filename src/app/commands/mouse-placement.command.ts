@@ -63,7 +63,7 @@ export abstract class MousePlacementCommand {
       this.subscriptions = null;
       this._object3D = null;
       this._mouseUpCount = 0;
-      this.mouseLocations.length = 0;
+      this.mouseLocations = [];
     }
   }
 

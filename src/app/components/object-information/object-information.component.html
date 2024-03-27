@@ -1,6 +1,6 @@
 <div class="scrollable-container">
-  <form [formGroup]="tableForm">
-    <table mat-table [dataSource]="rows.controls" class="mat-elevation-z8 custom-mat-table" formArrayName="rows">
+  <form [formGroup]="tableForm" >
+    <table *ngIf="rows.length" mat-table [dataSource]="rows.controls" class="mat-elevation-z8 custom-mat-table" formArrayName="rows">
 
       <ng-container matColumnDef="name">
         <th mat-header-cell *matHeaderCellDef> Name </th>
@@ -11,18 +11,59 @@
       <ng-container matColumnDef="value">
         <th mat-header-cell *matHeaderCellDef> Value </th>
         <td mat-cell *matCellDef="let element; let i = index" [formGroupName]="i">
-          <ng-container *ngIf="editingIndex === i">
-            <input *ngIf="element.get('name').value === 'color'" [(colorPicker)]="element.get('value').value"
-              [style.background]="element.get('value').value"
-              (colorPickerChange)="element.get('value').setValue($event);" (colorPickerClose)="colorPickerChange(i)"
-              (keydown)="handleKeydown($event, i)" appAutofocus>
+          @if (editingIndex === i) {
+            @switch (element.get('type').value) {
+              @case ('string') {
+                @if (element.get('name').value === 'color'){
+                  <input [(colorPicker)]="element.get('value').value" [style.background]="element.get('value').value"
+                    (colorPickerChange)="element.get('value').setValue($event);" (colorPickerClose)="colorPickerChange(i)"
+                    (keydown)="handleKeydown($event, i)" appAutofocus>
+                  }
+                @else {
+                  <input #input matInput formControlName="value" type="text" (keydown)="handleKeydown($event, i)" appAutofocus
+                    (blur)="cancelEdit(-1)">
+                }
+              }
 
-            <input *ngIf="element.get('name').value !== 'color'" #input matInput formControlName="value"
-              (keydown)="handleKeydown($event, i)" appAutofocus (blur)="cancelEdit(-1)">
-          </ng-container>
-          <div *ngIf="editingIndex !== i" (dblclick)="startEdit(i, element.get('value').value)">
-            {{element.get('value').value}}
-          </div>
+              @case('number'){
+                @if (element.get('name').value === 'color'){
+                  <input [(colorPicker)]="element.get('value').value" [style.background]="element.get('value').value"
+                    (colorPickerChange)="element.get('value').setValue($event);" (colorPickerClose)="colorPickerChange(i)"
+                    (keydown)="handleKeydown($event, i)" appAutofocus>
+                  }
+                @else {
+                  <input #input matInput formControlName="value" type="number" (keydown)="handleKeydown($event, i)" appAutofocus
+                  (blur)="cancelEdit(-1)">
+                }
+              }
+
+              @case ('vector') {
+                <div formArrayName="value" class="vector-container" appClickOutside (clickOutside)="onChange(i)">
+                  <div *ngFor="let vec of element.get('value').controls; let j = index" [formGroupName]="j" class="vector-group">
+                    <input type="number" formControlName="x" (change)="changed = true" class="vector-input">
+                    <input type="number" formControlName="y" (change)="changed = true" class="vector-input">
+                    <input type="number" formControlName="z" (change)="changed = true" class="vector-input">
+                  </div>
+                </div>
+              }
+            }
+          } @else {
+            @switch (element.get('type').value) {
+              @case ('vector'){
+                <div formArrayName="value" (blur)="cancelEdit(-1)" appAutofocus class="vector-container">
+                  <div (dblclick)="startEdit(i, element.get('value').value)" *ngFor="let vec of element.get('value').controls; let j = index" [formGroupName]="j">
+                    {{toString(vec?.value)}}
+                  </div>
+                </div>
+              }
+
+              @default {
+                <div (dblclick)="startEdit(i, element.get('value').value)">
+                  {{element.get('value').value}}
+                </div>
+              }
+            }
+          }
         </td>
       </ng-container>
 

@@ -12,7 +12,6 @@ import { FamilyCreatorPaneComponent } from '../family-creator-pane/family-pane.c
 import { FileManagementComponent } from '../file-management/file-management.component';
 import { LayerManagementComponent } from '../layer-management/layer-management.component';
 import { ObjectInformationComponent } from '../object-information/object-information.component';
-import { SaveComponent } from '../save/save.component';
 
 export type tab = '' | 'layers' | 'geometries' | 'families' | 'info' | 'save';
 
@@ -20,7 +19,7 @@ export type tab = '' | 'layers' | 'geometries' | 'families' | 'info' | 'save';
   selector: 'app-sidebar',
   standalone: true,
   imports: [NgClass, NgIf, CdkDrag, CdkDragHandle, MatIconModule, LayerManagementComponent, DrawingToolbarComponent,
-    FileManagementComponent, SaveComponent, ObjectInformationComponent, FamilyCreatorPaneComponent],
+    FileManagementComponent, ObjectInformationComponent, FamilyCreatorPaneComponent],
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.scss'
 })

@@ -9,5 +9,5 @@ import { MatIcon } from '@angular/material/icon';
   styleUrl: './object-control-toolbar.component.scss'
 })
 export class ObjectControlToolbarComponent {
-
+  play() { }
 }

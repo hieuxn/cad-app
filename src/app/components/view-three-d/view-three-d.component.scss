@@ -11,3 +11,16 @@
   background-color: rgba(75, 160, 255, 0.3);
   position: fixed;
 }
+
+.floating-text {
+  position: fixed; /* Fixed positioning to make it float */
+  right: 20px; /* Distance from the right */
+  bottom: 20px; /* Distance from the bottom */
+  color: white; /* Text color */
+  background-color: rgba(0, 0, 0, 0.5); /* Optional: Adds a semi-transparent background */
+  padding: 10px; /* Some padding around the text */
+  z-index: 1000; /* Ensure it's above other items, increase if not sufficient */
+  border-radius: 5px; /* Optional: Rounds the corners */
+  font-size: 16px; /* Adjust the font size as needed */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3); /* Optional: Adds a shadow for better readability */
+}

@@ -32,7 +32,7 @@ export class DrawingToolbarComponent {
     const polyline = new DrawPolyLineCommand(injector);
     polyline.name = `Polyline`;
     polyline.color = 0xFFFF00;
-    polyline.userData['blockName'] = `${family}-${familyName}-${materialId}-${structuralLayerName}`;
+    // polyline.userData['blockName'] = `${family}-${familyName}-${materialId}-${structuralLayerName}`;
 
     const cylinder = new DrawCylinderCommand(injector);
     // cylinder.userData['blockName'] = 'My Cylinder Family';

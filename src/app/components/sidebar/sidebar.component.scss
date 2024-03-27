@@ -33,6 +33,31 @@ mat-icon {
   position: relative;
 }
 
+.expandable-sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  // align-items: last baseline;
+  align-content: start;
+}
+
+.expandable-sidebar ul li {
+  padding: 10px;
+  color: #ddd;
+  border-bottom: 1px solid #444;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  height: 40px;
+}
+
+.expandable-sidebar ul li.active,
+.sidebar-panel ul li:hover {
+  background-color: #555;
+  margin-right: 10px;
+  width: 20px;
+  text-align: center;
+}
+
 .resize-handle {
   width: 10px;
   // background-color: #FFF;

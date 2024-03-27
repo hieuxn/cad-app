@@ -1,0 +1,36 @@
+.sidebar-panel {
+  background-color: #333;
+  height: 100vh;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.sidebar-panel ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar-panel ul li {
+  display: flex;
+  align-items: center;
+  padding: 15px;
+  color: #ddd;
+  border-bottom: 1px solid #444;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.sidebar-panel ul li.active,
+.sidebar-panel ul li:hover {
+  background-color: #555;
+}
+
+.sidebar-panel ul li i {
+  margin-right: 5px;
+}
+
+.sidebar-panel ul li i {
+  width: 40px;
+  text-align: left;
+}

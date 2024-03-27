@@ -1,6 +1,6 @@
 import { ElementRef, Injectable, Injector } from "@angular/core";
 import { Subject, takeUntil } from "rxjs";
-import { AmbientLight, AxesHelper, Camera, Clock, Color, GridHelper, MOUSE, Object3D, OrthographicCamera, PCFShadowMap, PerspectiveCamera, Scene, SpotLight, WebGLRenderer } from "three";
+import { AmbientLight, AxesHelper, Camera, Clock, Color, GridHelper, MOUSE, Mesh, Object3D, OrthographicCamera, PCFShadowMap, PerspectiveCamera, PlaneGeometry, Scene, ShaderMaterial, SpotLight, WebGLRenderer } from "three";
 import { MapControls } from "three/examples/jsm/controls/MapControls.js";
 
 export class CameraChangedEvent {
@@ -25,6 +25,7 @@ export class MainView3DService {
   scene!: Scene;
   activeCamera!: Camera;
   renderer!: WebGLRenderer;
+  readonly defaultChildCount = 4;
 
   get object3Ds(): Object3D[] {
     return this.scene.children;
@@ -137,23 +138,61 @@ export class MainView3DService {
   }
 
   private _initGrid() {
-    const size: number = 50;
-    const divisions: number = 50;
+    const size: number = 500;
+    const divisions: number = 500;
     const gridHelper = new GridHelper(size, divisions);
     gridHelper.rotation.x = Math.PI / 2;
     gridHelper.position.z = 0;
+    // const gridHelper = this._createGrid();
     this.scene.add(gridHelper);
 
     const axesHelper = new AxesHelper(1);
     this.scene.add(axesHelper);
   }
 
+  private _createGrid(): Mesh {
+    const gridMaterial = new ShaderMaterial({
+      vertexShader: `
+            varying vec3 vWorldPosition;
+            void main() {
+                vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+                vWorldPosition = worldPosition.xyz;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+        `,
+      fragmentShader: `
+            varying vec3 vWorldPosition;
+            void main() {
+                float grid = abs(sin(vWorldPosition.x * 0.1) * sin(vWorldPosition.z * 0.1));
+                if(grid < 0.5) discard;
+                gl_FragColor = vec4(0.1, 0.1, 0.1, 1.0);
+            }
+        `,
+      transparent: true,
+    });
+
+    const gridPlane = new PlaneGeometry(10, 10);  // Large plane for the grid
+    const gridMesh = new Mesh(gridPlane, gridMaterial);
+    // gridMesh.rotateX(- Math.PI / 2); // Rotate to lie flat
+    return gridMesh;
+  }
+
   private _onWindowResize(container: ElementRef) {
     if (this.activeCamera instanceof PerspectiveCamera) {
       this.activeCamera.aspect = container.nativeElement.clientWidth / container.nativeElement.clientHeight;
       this.activeCamera.updateProjectionMatrix();
-      this.renderer.setSize(container.nativeElement.clientWidth, container.nativeElement.clientHeight);
+    } else if (this.activeCamera instanceof OrthographicCamera) {
+      const aspect = container.nativeElement.clientWidth / container.nativeElement.clientHeight;
+      const frustumHeight = this.activeCamera.top - this.activeCamera.bottom;
+      const frustumWidth = frustumHeight * aspect;
+
+      this.activeCamera.left = -frustumWidth / 2;
+      this.activeCamera.right = frustumWidth / 2;
+      this.activeCamera.top = frustumHeight / 2;
+      this.activeCamera.bottom = -frustumHeight / 2;
+      this.activeCamera.updateProjectionMatrix();
     }
+    this.renderer.setSize(container.nativeElement.clientWidth, container.nativeElement.clientHeight);
   }
 
   private _animate(): void {

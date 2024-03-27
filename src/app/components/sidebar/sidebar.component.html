@@ -38,7 +38,6 @@
     </div>
     <div class="tab-content" [style.visibility]="activeTab === 'save' ? 'visible' : 'hidden'">
       <app-file-management></app-file-management>
-      <app-auto-save></app-auto-save>
     </div>
   </div>
   <div class="resize-handle" cdkDrag (cdkDragMoved)="onResize($event)" *ngIf="isExpanded"

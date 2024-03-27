@@ -1,28 +1,27 @@
 import { Injector } from '@angular/core';
-import { Group, Layers, Line, LineLoop, Mesh, Object3D, Scene } from 'three';
-import { LayerService } from '../services/layer.service';
+import { Subscription } from 'rxjs';
+import { Group, Layers, Line, Mesh, Object3D, Scene } from 'three';
 import { CameraChangedEvent, MainView3DService } from '../services/main-view-3d.service';
 import { ObjectSnappingUtils } from '../utils/object-snapping.utils';
 import { ThreeUtils } from '../utils/three.utils';
+import { ObservableSlim } from './observable-collection.model';
 
 export class ManagedLayer {
+	private _layers!: Layers;
+	// private _layerService: LayerService;
+	private _threeUtils = new ThreeUtils();
+	private _objectCollection = new ObservableSlim<Object3D>();
+	private _subscription = new Subscription();
+	private _scene!: Scene;
+
 	id: number;
 	name: string;
 	elevation: number;
 	active: boolean = false;
 	isVisible: boolean = true;
-
 	objects: Map<string, Object3D> = new Map<string, Object3D>();
 	objUtils: ObjectSnappingUtils;
-	private _layers!: Layers;
-	private _layerService: LayerService;
-	private _scene: Scene;
-	private _threeUtils = new ThreeUtils();
-	private _is3DObjectMap: Map<string, boolean> = new Map<string, boolean>([
-		[Line.name, false],
-		[LineLoop.name, false],
-		[Group.name, false],
-	])
+	items$ = this._objectCollection.items$;
 
 	get object3Ds(): Object3D[] {
 		return this._scene.children;
@@ -36,7 +35,7 @@ export class ManagedLayer {
 		this._scene = mainViewService.scene!;
 		this._layers = mainViewService.activeCamera.layers;
 		mainViewService.onCameraChanged$.subscribe(this._onCameraChanged.bind(this));
-		this._layerService = injector.get(LayerService);
+		// this._layerService = injector.get(LayerService);
 		this.objUtils = new ObjectSnappingUtils();
 	}
 
@@ -57,7 +56,14 @@ export class ManagedLayer {
 			this._setLayer(item, this.id);
 			if (this.objects.get(item.uuid)) throw new Error("Duplicated uuid");
 			this.objects.set(item.uuid, item);
+
 			this._scene.add(item);
+			this._objectCollection.add(item);
+
+			if (Object.keys(item.userData).length > 0) {
+				console.log('add: ' + this._scene.children.filter(c => Object.keys(c.userData).length > 0).map(c => c.uuid))
+			}
+
 			if (useQuadTree) this._addToQuadTree(item);
 		}
 	}
@@ -70,11 +76,11 @@ export class ManagedLayer {
 		}
 	}
 
-	private _unsetLayer(object: Object3D) {
+	unsetLayer(object: Object3D) {
 		const offset = this._threeUtils.getSetBitPositions(object.layers.mask)[0] - this.id;
 		object.layers.set(offset);
 		if (object.children.length > 0) {
-			object.children.forEach(c => this._unsetLayer(c));
+			object.children.forEach(c => this.unsetLayer(c));
 		}
 	}
 
@@ -106,8 +112,15 @@ export class ManagedLayer {
 	removeObjects(objects: Object3D[] | Object3D, useQuadTree: boolean = true): void {
 		objects = objects instanceof Array ? objects : [objects]
 		for (const item of objects) {
-			this._unsetLayer(item);
+			this.unsetLayer(item);
+
 			this._scene.remove(item);
+			this._objectCollection.remove(item);
+
+			if (Object.keys(item.userData).length > 0) {
+				console.log('remove: ' + this._scene.children.filter(c => Object.keys(c.userData).length > 0).map(c => c.uuid))
+			}
+
 			this.objects.delete(item.uuid);
 			if (useQuadTree) this._removeFromQuadTree(item);
 		}
@@ -122,7 +135,7 @@ export class ManagedLayer {
 			}
 		});
 
-		this._scene.remove(...toRemove);
+		toRemove.forEach(o => this._objectCollection.remove(o));
 		this.objUtils.clear()
 		this.objects.clear();
 	}

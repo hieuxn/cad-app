@@ -34,3 +34,19 @@ input {
 .scrollable-container::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
+
+.vector-container {
+  display: flex;
+  flex-direction: column; /* Stack vector groups vertically */
+}
+
+.vector-group {
+  display: flex; /* This will place child elements (inputs) in a row */
+  justify-content: space-between; /* Add space between the inputs */
+  margin-bottom: 8px; /* Optional: adds some space between rows for clarity */
+}
+
+.vector-input {
+  flex: 1; /* Each input will take equal width */
+  margin: 0 4px; /* Optional: adds some space between the inputs */
+}

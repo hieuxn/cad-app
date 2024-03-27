@@ -1,25 +1,33 @@
 import { Injectable } from "@angular/core";
 import { Group } from "three";
+import { CylinderData } from "../utils/three-object-creation/creators/cylinder.creator";
+import { HBeamData } from "../utils/three-object-creation/creators/h-beam.creator";
+import { PolylineData } from "../utils/three-object-creation/creators/polyline.creator";
 import { ThreeObjectCreationUtils } from "../utils/three-object-creation/three-object-creation.utils";
-import { ThreeUtils } from "../utils/three.utils";
 
 export type geometryObject = 'cylinder' | 'polyline'
 
 @Injectable({ providedIn: 'root' })
 export class ThreeObjectCreationService {
   private _creator = new ThreeObjectCreationUtils();
-  private _threeUtils = new ThreeUtils();
   cylinder = this._creator.cylinder;
   hBeam = this._creator.hBeam;
+  polyline = this._creator.polyline;
 
-  update(group: Group) {
-    switch (group.name) {
+  reCreate(group: Group): Group {
+    return this.reCreateByName(group.name, group.userData);
+  }
+
+  reCreateByName(name: string, userData: Record<string, any>) {
+    switch (name) {
       case this.cylinder.name:
-        this.cylinder.temporarilyScale(group);
-        break;
+        return this.cylinder.create(userData as CylinderData);
       case this.hBeam.name:
-        this.hBeam.temporarilyScale(group);
-        break;
+        return this.hBeam.create(userData as HBeamData);
+      case this.polyline.name:
+        return this.polyline.create(userData as PolylineData);
+      default:
+        throw new Error('No creator for this kind of group: ' + name);
     }
   }
 }

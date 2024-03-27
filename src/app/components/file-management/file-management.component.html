@@ -1,8 +1,10 @@
-<button mat-raised-button color="accent" (click)="fileInput.click()">
-  Choose File
-</button>
 <input type="file" #fileInput hidden (change)="handleFileInput($event)" appAcceptFiles>
 
-<button mat-raised-button color="primary" (click)="export()">
-  Export File
-</button>
+<div class="sidebar-panel">
+  <ul>
+    <li (click)="fileInput.click()"><i class="fa-solid fa-folder-open"></i>Choose File</li>
+    <li (click)="export()"><i class="fa-solid fa-download"></i>Export File</li>
+    <li (click)="save()"><i class="fa-solid fa-floppy-disk"></i>Save Scene</li>
+    <li (click)="clear()"><i class="fa-solid fa-eraser"></i>Clear Scene</li>
+  </ul>
+</div>
