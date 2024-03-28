@@ -153,7 +153,7 @@ export class ObjectInformationComponent implements AfterViewInit {
     newGroup.applyMatrix4(group.matrix)
     this._layerService.activeLayer.removeObjects(group);
     this._layerService.activeLayer.addObjects(newGroup);
-    console.log('Edit');
+    // console.log('Edit');
     this.rows.clear();
 
     this._commandService.addCommand(new CommandActionBase(`Update Object: ${name}`, () => {

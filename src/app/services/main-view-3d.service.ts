@@ -1,7 +1,7 @@
 import { ElementRef, Injectable, Injector } from "@angular/core";
 import { Subject, takeUntil } from "rxjs";
-import { AmbientLight, AxesHelper, Camera, Clock, Color, GridHelper, MOUSE, Mesh, Object3D, OrthographicCamera, PCFShadowMap, PerspectiveCamera, PlaneGeometry, Scene, ShaderMaterial, SpotLight, WebGLRenderer } from "three";
-import { MapControls } from "three/examples/jsm/controls/MapControls.js";
+import { AmbientLight, AxesHelper, Camera, Clock, Color, GridHelper, MOUSE, Mesh, Object3D, OrthographicCamera, PCFShadowMap, PerspectiveCamera, PlaneGeometry, Scene, ShaderMaterial, Spherical, SpotLight, Vector3, WebGLRenderer } from "three";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
 export class CameraChangedEvent {
   public isOrthographicCamera: boolean = false;
@@ -11,7 +11,7 @@ export class CameraChangedEvent {
 }
 @Injectable({ providedIn: 'root' })
 export class MainView3DService {
-  private _controlsMap: Map<string, MapControls> = new Map<string, MapControls>();
+  private _controlsMap: Map<string, OrbitControls> = new Map<string, OrbitControls>();
   private _perspectiveCamera!: PerspectiveCamera;
   private _orthographicCamera!: OrthographicCamera;
   private _clock: Clock = new Clock();
@@ -31,7 +31,7 @@ export class MainView3DService {
     return this.scene.children;
   }
 
-  get controls(): MapControls {
+  get controls(): OrbitControls {
     return this._controlsMap.get(this.activeCamera.type)!;
   }
 
@@ -45,13 +45,15 @@ export class MainView3DService {
       this.activeCamera = this._orthographicCamera;
     }
 
-    if (this.activeCamera === this._perspectiveCamera) {
-      this.activeCamera.position.set(0, -10, 5);
+    const init = this._initControl(this.activeCamera.type);
+    if (init) {
+      if (this.activeCamera === this._perspectiveCamera) {
+        this.activeCamera.position.set(0, -10, 5);
+      }
+      else {
+        this.activeCamera.position.set(0, 0, 10);
+      }
     }
-    else {
-      this.activeCamera.position.set(0, 0, 10);
-    }
-    this._initControl(this.activeCamera.type);
     this._onCameraChanged.next(new CameraChangedEvent(this.activeCamera));
   }
 
@@ -121,20 +123,23 @@ export class MainView3DService {
     this._destroy.complete();
   }
 
-  private _initControl(cameraType: string) {
+  private _initControl(cameraType: string): boolean {
     if (!this._controlsMap.get(cameraType)) {
-      const controls = new MapControls(this.activeCamera, this.renderer.domElement);
+      const controls = new OrbitControls(this.activeCamera, this.renderer.domElement);
       controls.enableDamping = false;
       controls.dampingFactor = 0.75;
       controls.screenSpacePanning = true;
       controls.minDistance = -Infinity;
       controls.mouseButtons.LEFT = null;
       controls.mouseButtons.MIDDLE = MOUSE.PAN;
+      controls.mouseButtons.RIGHT = MOUSE.ROTATE;
       if (cameraType === OrthographicCamera.name) {
         controls.enableRotate = false;
       }
       this._controlsMap.set(cameraType, controls);
+      return true;
     }
+    return false;
   }
 
   private _initGrid() {
@@ -200,5 +205,15 @@ export class MainView3DService {
     const delta = this._clock.getDelta();
     this._controlsMap.forEach(kvp => kvp.update(delta));
     this.renderer.render(this.scene, this.activeCamera);
+  }
+
+  rotateCameraToDirection(targetDirection: Vector3): void {
+    const centerPoint = this.controls.target;
+    const radius = (this.activeCamera.position.clone().sub(centerPoint)).length();
+    const targetSpherical = new Spherical().setFromVector3(targetDirection.clone().normalize().multiplyScalar(radius));
+    const finalPosition = new Vector3().setFromSpherical(targetSpherical).add(centerPoint);
+
+    this.activeCamera.position.copy(finalPosition);
+    this.activeCamera.lookAt(centerPoint);
   }
 }

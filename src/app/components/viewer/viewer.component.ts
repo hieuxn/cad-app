@@ -22,7 +22,7 @@ export class ViewerComponent implements OnInit, AfterViewInit {
   constructor(injector: Injector) {
     this._mainView3DService = injector.get(MainView3DService);
     this._mouseService = injector.get(SINGLETON_MOUSE_SERVICE_TOKEN);
-    this._viewSyncUtils = new ViewSyncUtils()
+    this._viewSyncUtils = new ViewSyncUtils(injector);
   }
 
   ngAfterViewInit(): void {

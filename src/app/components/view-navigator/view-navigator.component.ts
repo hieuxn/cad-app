@@ -1,6 +1,7 @@
 import { AfterViewInit, Component, ElementRef, HostListener, OnDestroy, ViewChild } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { AxesHelper, Camera, Clock, Object3D, OrthographicCamera, Raycaster, Scene, Sprite, SpriteMaterial, Texture, Vector2, Vector3, WebGLRenderer } from 'three';
+import { gsap } from 'gsap';
+import { AxesHelper, Camera, Clock, Euler, Object3D, OrthographicCamera, Raycaster, Scene, Spherical, Sprite, SpriteMaterial, Texture, Vector2, Vector3, WebGLRenderer } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { MainView3DService } from '../../services/main-view-3d.service';
 
@@ -43,7 +44,7 @@ export class ViewNavigatorComponent implements AfterViewInit, OnDestroy {
   get gizmo(): Object3D { return this._gizmo; }
   isOrthographicCamera = true;
 
-  private checkCamera() {
+  private _checkCamera() {
     if (!this._mainViewService.activeCamera) this.isOrthographicCamera = true;
     this.isOrthographicCamera = this._mainViewService.activeCamera.type == OrthographicCamera.name;;
   };
@@ -52,7 +53,7 @@ export class ViewNavigatorComponent implements AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
-    this.init(this._viewNavigator)
+    this._init(this._viewNavigator)
   }
 
   ngOnDestroy(): void {
@@ -63,12 +64,12 @@ export class ViewNavigatorComponent implements AfterViewInit, OnDestroy {
 
   resetPosition() {
     this._gizmo.position.set(0, 0, 0);
-    this._gizmo.rotation.set(0, 0, 0);
+    this._gizmo.rotation.set(0, 0, 0, Euler.DEFAULT_ORDER);
     this._controls.reset();
     this._camera.position.set(0, 0, 10);
   }
 
-  private init(container: ElementRef) {
+  private _init(container: ElementRef) {
     this._scene = new Scene();
     this._gizmo = new Object3D();
     const nativeElement = container.nativeElement;
@@ -90,24 +91,24 @@ export class ViewNavigatorComponent implements AfterViewInit, OnDestroy {
     this._controls.screenSpacePanning = false;
     this._controls.enablePan = false;
 
-    const labelX = this.createLabel('X', 'red');
+    const labelX = this._createLabel('X', 'red');
     labelX.position.set(this._labelOffset, 0, 0);
     this._gizmo.add(labelX);
-    const labelX2 = this.createLabel('-X', 'red', false);
+    const labelX2 = this._createLabel('-X', 'red', false);
     labelX2.position.set(-this._labelOffset, 0, 0);
     this._gizmo.add(labelX2);
 
-    const labelY = this.createLabel('Y', 'green');
+    const labelY = this._createLabel('Y', 'green');
     labelY.position.set(0, this._labelOffset, 0);
     this._gizmo.add(labelY);
-    const labelY2 = this.createLabel('-Y', 'green', false);
+    const labelY2 = this._createLabel('-Y', 'green', false);
     labelY2.position.set(0, -this._labelOffset, 0);
     this._gizmo.add(labelY2);
 
-    const labelZ = this.createLabel('Z', 'blue');
+    const labelZ = this._createLabel('Z', 'blue');
     labelZ.position.set(0, 0, this._labelOffset);
     this._gizmo.add(labelZ);
-    const labelZ2 = this.createLabel('-Z', 'blue', false);
+    const labelZ2 = this._createLabel('-Z', 'blue', false);
     labelZ2.position.set(0, 0, -this._labelOffset);
     this._gizmo.add(labelZ2);
 
@@ -117,10 +118,10 @@ export class ViewNavigatorComponent implements AfterViewInit, OnDestroy {
     this._scene.add(this._gizmo);
 
     this.resetPosition()
-    this.animate();
+    this._animate();
   }
 
-  private createLabel(text: string, color: string, fill: boolean = true) {
+  private _createLabel(text: string, color: string, fill: boolean = true) {
     const canvas = document.createElement('canvas');
     const size = 256;
     canvas.width = size;
@@ -156,8 +157,8 @@ export class ViewNavigatorComponent implements AfterViewInit, OnDestroy {
     return sprite;
   }
 
-  private animate = () => {
-    requestAnimationFrame(this.animate);
+  private _animate = () => {
+    requestAnimationFrame(this._animate);
     const delta = this._clock.getDelta();
     this._controls.update(delta);
     this._renderer.render(this._scene, this._camera);
@@ -165,11 +166,11 @@ export class ViewNavigatorComponent implements AfterViewInit, OnDestroy {
 
   switchCamera(): void {
     this._mainViewService.switchCamera();
-    this.checkCamera();
+    this._checkCamera();
   }
 
   @HostListener('mousedown', ['$event'])
-  private onMouseDown(event: MouseEvent) {
+  private _onMouseDown(event: MouseEvent) {
     this._controls.enableRotate = !this.isOrthographicCamera;
     if (!this._controls.enableRotate) return;
     const mouse = new Vector2();
@@ -190,13 +191,30 @@ export class ViewNavigatorComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  private rotateCameraToDirection(targetDirection: Vector3): void {
-    this._gizmo.rotation.set(0, 0, 0);
-    this._camera.position.copy(targetDirection);
-    this._camera.lookAt(new Vector3());
-    this.controls.update();
-    this._mainViewService.controls?.reset();
-    this._mainViewService.activeCamera.position.copy(this._camera.position);
-    this._mainViewService.controls?.update();
+  rotateCameraToDirection(targetDirection: Vector3): void {
+    const centerPoint = this._gizmo.position;
+    const radius = (this.camera.position.clone().sub(centerPoint)).length();
+    const targetSpherical = new Spherical().setFromVector3(targetDirection.clone().sub(centerPoint).normalize().multiplyScalar(radius));
+    const currentSpherical = new Spherical().setFromVector3(this._camera.position.sub(centerPoint));
+
+    gsap.to(currentSpherical, {
+      phi: targetSpherical.phi,
+      theta: targetSpherical.theta,
+      duration: 0.2,
+      onUpdate: () => {
+        const newPosition = new Vector3().setFromSpherical(currentSpherical).add(centerPoint);
+        this._camera.position.copy(newPosition);
+
+        this._camera.lookAt(centerPoint);
+        this._camera.updateProjectionMatrix();
+
+        this._controls.update();
+      },
+      onComplete: () => {
+        const finalPosition = new Vector3().setFromSpherical(targetSpherical).add(centerPoint);
+        this._camera.position.copy(finalPosition);
+        this._camera.lookAt(centerPoint);
+      }
+    });
   }
 }

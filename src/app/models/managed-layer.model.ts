@@ -60,9 +60,9 @@ export class ManagedLayer {
 			this._scene.add(item);
 			this._objectCollection.add(item);
 
-			if (Object.keys(item.userData).length > 0) {
-				console.log('add: ' + this._scene.children.filter(c => Object.keys(c.userData).length > 0).map(c => c.uuid))
-			}
+			// if (Object.keys(item.userData).length > 0) {
+			// 	console.log('add: ' + this._scene.children.filter(c => Object.keys(c.userData).length > 0).map(c => c.uuid))
+			// }
 
 			if (useQuadTree) this._addToQuadTree(item);
 		}
@@ -117,9 +117,9 @@ export class ManagedLayer {
 			this._scene.remove(item);
 			this._objectCollection.remove(item);
 
-			if (Object.keys(item.userData).length > 0) {
-				console.log('remove: ' + this._scene.children.filter(c => Object.keys(c.userData).length > 0).map(c => c.uuid))
-			}
+			// if (Object.keys(item.userData).length > 0) {
+			// 	console.log('remove: ' + this._scene.children.filter(c => Object.keys(c.userData).length > 0).map(c => c.uuid))
+			// }
 
 			this.objects.delete(item.uuid);
 			if (useQuadTree) this._removeFromQuadTree(item);

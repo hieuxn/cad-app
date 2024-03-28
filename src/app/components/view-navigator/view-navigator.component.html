@@ -1,6 +1,11 @@
 <div>
-  <button mat-fab class="grid-toggle-button" (click)="switchCamera()">
-    {{ isOrthographicCamera ? '2D' : '3D'}}
+  <button mat-mini-fab  class="grid-toggle-button" (click)="switchCamera()">
+    @if (isOrthographicCamera){
+    <i class="fa-solid fa-cube"></i>
+    }
+    @else {
+    <i class="fa-solid fa-table-cells-large"></i>
+    }
   </button>
   <div #viewNavigator id="viewNavigator"></div>
 </div>
