@@ -5,7 +5,7 @@ import { MatTableModule } from '@angular/material/table';
 import { CommandManagerComponent } from './components/command-manager/command-manager.component';
 import { ContextMenuComponent } from './components/context-menu/context-menu.component';
 import { CoordinateDisplayComponent } from './components/coordinate-display/coordinate-display.component';
-import { ObjectControlToolbarModule } from './components/object-control-toolbar/object-control-toolbar.module';
+import { ObjectControlToolbarComponent } from './components/object-control-toolbar/object-control-toolbar.component';
 import { SidebarComponent } from './components/sidebar/sidebar.component';
 import { ViewerComponent } from './components/viewer/viewer.component';
 
@@ -13,7 +13,7 @@ import { ViewerComponent } from './components/viewer/viewer.component';
   selector: 'app-root',
   standalone: true,
   imports: [CoordinateDisplayComponent, ViewerComponent, ContextMenuComponent, MatButtonModule, SidebarComponent,
-    DragDropModule, MatTableModule, ObjectControlToolbarModule, CommandManagerComponent],
+    DragDropModule, MatTableModule, ObjectControlToolbarComponent, CommandManagerComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })

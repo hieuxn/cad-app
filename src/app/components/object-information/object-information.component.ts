@@ -60,10 +60,12 @@ export class ObjectInformationComponent implements AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    const sub = this._selectionService.observable$.subscribe(item => {
-      this.tableForm = this._formBuilder.group({ rows: this._formBuilder.array([]) });
-      this._buildForm(item);
-      if (this.rows.length > 0) this._sidebarService.selectTab('info', true);
+    const sub = this._selectionService.selectedObjects$.subscribe(item => {
+      if (item.change === 'add') {
+        this.tableForm = this._formBuilder.group({ rows: this._formBuilder.array([]) });
+        this._buildForm(item.changedItem);
+        if (this.rows.length > 0) this._sidebarService.selectTab('info', true);
+      }
     });
   }
 

@@ -44,8 +44,8 @@ export class SidebarComponent implements AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    const sub = this._selectionService.observable$.subscribe(item => {
-      this.selectedObject = [item];
+    const sub = this._selectionService.selectedObjects$.subscribe(item => {
+      if (item.change === 'add') this.selectedObject = [item.changedItem];
     });
     this._subscription.add(sub);
     // this.selectTab('layers');

@@ -7,7 +7,7 @@ export class SnapData extends Vector2 {
   }
 }
 
-export class ObjectSnappingUtils {
+export class PointSnappingUtils {
   // TODO: bounding box detection
   private _maxSize: number = 500; // m
   private _capacity: number = 10;

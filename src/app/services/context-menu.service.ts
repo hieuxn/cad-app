@@ -44,9 +44,9 @@ export class ContextMenuService extends ThreeViewLifecycleBase {
         this._mouseService.mouseContextMenu$.subscribe(this._onMenuContextOpening.bind(this));
 
         const deleteCommand = ContextMenuGenericCommand.create('Delete', (event) => {
-            if (this._selectionService.selectedObjects.size === 0) return;
+            if (this._selectionService.selectedObjectMap.size === 0) return;
             const parents = new Map<string, Object3D>()
-            for (const [obj, material] of this._selectionService.selectedObjects.values()) {
+            for (const [obj, material] of this._selectionService.selectedObjectMap.values()) {
                 const parent = this._threeUtils.getParentGroup(obj);
                 if (!parent || parents.get(parent.uuid)) continue;
                 parents.set(parent.uuid, parent);
@@ -64,9 +64,9 @@ export class ContextMenuService extends ThreeViewLifecycleBase {
         }, false);
 
         const createFamilyCommand = ContextMenuGenericCommand.create('Create Family', (event) => {
-            if (this._selectionService.selectedObjects.size === 0) return;
+            if (this._selectionService.selectedObjectMap.size === 0) return;
             const group: Object3D[] = [];
-            for (const [obj, _] of this._selectionService.selectedObjects.values()) {
+            for (const [obj, _] of this._selectionService.selectedObjectMap.values()) {
                 group.push(obj);
             }
 
@@ -81,7 +81,7 @@ export class ContextMenuService extends ThreeViewLifecycleBase {
     private _onMenuContextOpening(onContextMenuOpening: any) {
         const deleteCommand = this._contextMenuCommands[0];
         const createFamilyCommand = this._contextMenuCommands[1];
-        deleteCommand.isVisible = createFamilyCommand.isVisible = this._selectionService.selectedObjects.size > 0;
+        deleteCommand.isVisible = createFamilyCommand.isVisible = this._selectionService.selectedObjectMap.size > 0;
     }
 
     register(contextMenu: ContextMenuComponent) {

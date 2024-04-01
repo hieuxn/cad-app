@@ -2,7 +2,7 @@ import { Injector } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { Group, Layers, Line, Mesh, Object3D, Scene } from 'three';
 import { CameraChangedEvent, MainView3DService } from '../services/main-view-3d.service';
-import { ObjectSnappingUtils } from '../utils/object-snapping.utils';
+import { PointSnappingUtils } from '../utils/point-snapping.utils';
 import { ThreeUtils } from '../utils/three.utils';
 import { ObservableSlim } from './observable-collection.model';
 
@@ -20,7 +20,7 @@ export class ManagedLayer {
 	active: boolean = false;
 	isVisible: boolean = true;
 	objects: Map<string, Object3D> = new Map<string, Object3D>();
-	objUtils: ObjectSnappingUtils;
+	objUtils: PointSnappingUtils;
 	items$ = this._objectCollection.items$;
 
 	get object3Ds(): Object3D[] {
@@ -36,7 +36,7 @@ export class ManagedLayer {
 		this._layers = mainViewService.activeCamera.layers;
 		mainViewService.onCameraChanged$.subscribe(this._onCameraChanged.bind(this));
 		// this._layerService = injector.get(LayerService);
-		this.objUtils = new ObjectSnappingUtils();
+		this.objUtils = new PointSnappingUtils();
 	}
 
 	private _onCameraChanged(event: CameraChangedEvent) {

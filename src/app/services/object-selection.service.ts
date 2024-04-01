@@ -1,8 +1,9 @@
 import { Injectable, Injector } from "@angular/core";
-import { Subject } from "rxjs";
+import { Subscription } from "rxjs";
 import THREE, { Material, MeshStandardMaterial, Object3D, OrthographicCamera, PerspectiveCamera, Raycaster, Vector2 } from "three";
 import { SelectionBox, SelectionHelper } from "three/examples/jsm/Addons.js";
 import { ManagedLayer } from "../models/managed-layer.model";
+import { ObservableSlim } from "../models/observable-collection.model";
 import { ThreeViewLifecycleBase } from "../models/three-view-ready.model";
 import { ThreeUtils } from "../utils/three.utils";
 import { LayerService } from "./layer.service";
@@ -11,8 +12,9 @@ import { MouseService, SINGLETON_MOUSE_SERVICE_TOKEN } from "./mouse.service";
 
 @Injectable({ providedIn: 'root' })
 export class ObjectSelectionService extends ThreeViewLifecycleBase {
-  private _subject = new Subject<Object3D>();
-  private _hoveredObjects: Map<string, [Object3D, Material]> = new Map<string, [Object3D, Material]>();
+  private _selectedObjectsSubject = new ObservableSlim<Object3D>();
+  private _hoveredObjectsSubject = new ObservableSlim<Object3D>();
+  private _hoveredObjectMap: Map<string, [Object3D, Material]> = new Map<string, [Object3D, Material]>();
   private _selectedMaterial!: MeshStandardMaterial;
   private _hoveredMaterial!: MeshStandardMaterial;
   private _mainViewService!: MainView3DService;
@@ -26,8 +28,9 @@ export class ObjectSelectionService extends ThreeViewLifecycleBase {
   private _isLeftCicked = false;
   private _threeUtils = new ThreeUtils();
 
-  observable$ = this._subject.asObservable();
-  selectedObjects: Map<string, [Object3D, Material]> = new Map<string, [Object3D, Material]>();
+  selectedObjects$ = this._selectedObjectsSubject.items$;
+  hoveredObjects$ = this._hoveredObjectsSubject.items$;
+  selectedObjectMap: Map<string, [Object3D, Material]> = new Map<string, [Object3D, Material]>();
 
   constructor(injector: Injector) {
     super(injector);
@@ -38,10 +41,31 @@ export class ObjectSelectionService extends ThreeViewLifecycleBase {
     this._mouseService = this.injector.get(SINGLETON_MOUSE_SERVICE_TOKEN);
     this._layerService = this.injector.get(LayerService);
 
-    this._layerService.activeLayer$.subscribe(this._onActiveLayerChanged.bind(this));
+    this._selectedMaterial = new MeshStandardMaterial({ depthTest: true, depthWrite: true, emissive: 0x00FF00, color: 0x00FF00, emissiveIntensity: 0.9 });
+    this._hoveredMaterial = new MeshStandardMaterial({ depthTest: true, depthWrite: true, emissive: 0xF44A3E, color: 0xF44A3E, emissiveIntensity: 0.9 });
 
+    this._raycaster.params.Line.threshold = 0.2;
 
-    let sub = this._mouseService.mouseMove$.subscribe(event => {
+    const renderer = this._mainViewService.renderer;
+    const scene = this._mainViewService.scene;
+    const camera = this._mainViewService.activeCamera;
+
+    this._selectionHelper = new SelectionHelper(renderer, 'selectBox');
+    this._selectionHelper.enabled = false;
+
+    this._selectionBoxes.set(camera.type, this._selectionBox = new SelectionBox(camera, scene));
+
+    this.activate();
+  }
+
+  activate() {
+    this.enableSelectionBox(true);
+
+    if (this.subscription.closed) this.subscription = new Subscription();
+
+    let sub = this._layerService.activeLayer$.subscribe(this._onActiveLayerChanged.bind(this));
+
+    sub = this._mouseService.mouseMove$.subscribe(event => {
       const mousePosition = this._layerService.getMouseNDC(event);
       if (false == this._hover(mousePosition)) this._unhover();
     });
@@ -66,40 +90,32 @@ export class ObjectSelectionService extends ThreeViewLifecycleBase {
     });
     this.subscription.add(sub);
 
-    this._selectedMaterial = new MeshStandardMaterial({ depthTest: true, depthWrite: true, emissive: 0x00FF00, color: 0x00FF00, emissiveIntensity: 0.9 });
-    this._hoveredMaterial = new MeshStandardMaterial({ depthTest: true, depthWrite: true, emissive: 0xF44A3E, color: 0xF44A3E, emissiveIntensity: 0.9 });
+    sub = this._mouseService.mouseDown$.subscribe(this._onSelectionBoxDraw.bind(this));
+    this.subscription.add(sub);
 
-    this._raycaster.params.Line.threshold = 0.2;
+    sub = this._mouseService.mouseMove$.subscribe(this._onSelectionBoxUpdate.bind(this));
+    this.subscription.add(sub);
 
-    const renderer = this._mainViewService.renderer;
-    const scene = this._mainViewService.scene;
-    const camera = this._mainViewService.activeCamera;
-
-    this._selectionHelper = new SelectionHelper(renderer, 'selectBox');
-    // const onSelectionStart = this._selectionHelper.onSelectStart;
-    // this._selectionHelper.onSelectStart = (event) => {
-    //   if ((event as MouseEvent).button !== 0) return;
-    //   onSelectionStart(event)
-    // }
-    // this._selectionHelper.onSelectStart.bind(this._selectionHelper);
-
-    this._selectionBoxes.set(camera.type, this._selectionBox = new SelectionBox(camera, scene));
+    sub = this._mouseService.mouseUp$.subscribe(this._onSelectionBoxFinish.bind(this));
+    this.subscription.add(sub);
 
     sub = this._mainViewService.onCameraChanged$.subscribe(event => {
       const newCamera = event.camera;
       if (undefined === this._selectionBoxes.get(newCamera.type)) {
-        this._selectionBoxes.set(newCamera.type, new SelectionBox(newCamera, scene));
+        this._selectionBoxes.set(newCamera.type, new SelectionBox(newCamera, this._mainViewService.scene));
       }
       this._selectionBox = this._selectionBoxes.get(newCamera.type)!;
     });
     this.subscription.add(sub);
+  }
 
-    sub = this._mouseService.mouseDown$.subscribe(this._onSelectionBoxDraw.bind(this));
-    this.subscription.add(sub);
-    sub = this._mouseService.mouseMove$.subscribe(this._onSelectionBoxUpdate.bind(this));
-    this.subscription.add(sub);
-    sub = this._mouseService.mouseUp$.subscribe(this._onSelectionBoxFinish.bind(this));
-    this.subscription.add(sub);
+  enableSelectionBox(enable: boolean) {
+    this._selectionHelper.enabled = enable;
+  }
+
+  deactivate() {
+    this.enableSelectionBox(false);
+    this.subscription?.unsubscribe();
   }
 
   private _onActiveLayerChanged(activeLayer: ManagedLayer) {
@@ -177,15 +193,16 @@ export class ObjectSelectionService extends ThreeViewLifecycleBase {
           && obj.material instanceof Material
           && obj.material !== this._hoveredMaterial
           && obj.material !== this._selectedMaterial
-          && undefined === this._hoveredObjects.get(obj.uuid)) {
+          && undefined === this._hoveredObjectMap.get(obj.uuid)) {
 
           if (resetHover) {
             resetHover = false;
             this._unhover();
           }
 
-          const originalMaterial = this.selectedObjects.get(obj.uuid)?.[1] || obj.material.clone();
-          this._hoveredObjects.set(obj.uuid, [obj, originalMaterial]);
+          const originalMaterial = this.selectedObjectMap.get(obj.uuid)?.[1] || obj.material.clone();
+          // this._hoveredObjectMap.set(obj.uuid, [obj, originalMaterial]);
+          this._addToHover(obj, originalMaterial)
           obj.material = this._hoveredMaterial;
           // console.log('hover');
         }
@@ -197,13 +214,13 @@ export class ObjectSelectionService extends ThreeViewLifecycleBase {
   }
 
   private _unhover() {
-    for (const [key, [obj, material]] of this._hoveredObjects) {
+    for (const [key, [obj, material]] of this._hoveredObjectMap) {
       if ('material' in obj && obj.material instanceof Material) {
         obj.material = material;
-        // console.log('unhover');
       }
+      this._removeFromHover(obj);
     }
-    this._hoveredObjects.clear();
+    // this._hoveredObjectMap.clear();
   }
 
   private _handleSelection(mouseNDC: THREE.Vector2, multiSelect: boolean): void {
@@ -223,10 +240,10 @@ export class ObjectSelectionService extends ThreeViewLifecycleBase {
       let deselectAll = true;
       for (const obj of this._flatChildren(parent)) {
         if (multiSelect) {
-          if (this.selectedObjects.has(obj.uuid)) this.deselect(obj)
+          if (this.selectedObjectMap.has(obj.uuid)) this.deselect(obj)
           else this.select(obj);
         }
-        else if (this.selectedObjects.has(obj.uuid)) this.deselect(obj)
+        else if (this.selectedObjectMap.has(obj.uuid)) this.deselect(obj)
         else {
           if (deselectAll) {
             deselectAll = false;
@@ -246,35 +263,47 @@ export class ObjectSelectionService extends ThreeViewLifecycleBase {
   }
 
   select(obj: Object3D) {
-    if (!('material' in obj && obj.material instanceof Material)) return;
-    if (obj.material === this._selectedMaterial) return;
-    let originalMaterial = this._hoveredObjects.get(obj.uuid)?.[1];
-    if (undefined === originalMaterial) originalMaterial = obj.material.clone();
-    else this._hoveredObjects.delete(obj.uuid);
-
-    this._add(obj, originalMaterial);
-    obj.material = this._selectedMaterial;
+    const originalMaterial = this._removeFromHover(obj);
+    if (!originalMaterial) return;
+    this._addToSelection(obj, originalMaterial);
+    (obj as any).material = this._selectedMaterial;
   }
 
   deselect(obj: Object3D) {
     if (!('material' in obj && obj.material instanceof Material)) return;
-    const oldMaterial = this.selectedObjects.get(obj.uuid)?.[1];
+    const oldMaterial = this.selectedObjectMap.get(obj.uuid)?.[1];
     if (undefined === oldMaterial) return;
     obj.material = oldMaterial;
-    this.selectedObjects.delete(obj.uuid);
+    this.selectedObjectMap.delete(obj.uuid);
   }
 
   deselectAll() {
     // console.log('deselectAll');
-    this.selectedObjects.forEach(([selectedObj, mat], uuid) => {
+    this.selectedObjectMap.forEach(([selectedObj, mat], uuid) => {
       if (!('material' in selectedObj && selectedObj.material instanceof Material)) return;
-      selectedObj.material = this.selectedObjects.get(uuid)?.[1];
-      this.selectedObjects.delete(uuid);
+      selectedObj.material = this.selectedObjectMap.get(uuid)?.[1];
+      this.selectedObjectMap.delete(uuid);
     });
   }
 
-  private _add(object: Object3D, material: Material) {
-    this.selectedObjects.set(object.uuid, [object, material]);
-    this._subject.next(object);
+  private _addToSelection(object: Object3D, material: Material) {
+    this.selectedObjectMap.set(object.uuid, [object, material]);
+    this._selectedObjectsSubject.add(object);
+  }
+
+  private _addToHover(object: Object3D, material: Material) {
+    this._hoveredObjectMap.set(object.uuid, [object, material]);
+    this._hoveredObjectsSubject.add(object);
+  }
+
+  private _removeFromHover(object: Object3D): Material | null {
+    if (!('material' in object && object.material instanceof Material)) return null;
+    if (object.material === this._selectedMaterial) return null;
+    let originalMaterial = this._hoveredObjectMap.get(object.uuid)?.[1];
+    if (undefined === originalMaterial) originalMaterial = object.material.clone();
+    else this._hoveredObjectMap.delete(object.uuid);
+
+    this._hoveredObjectsSubject.remove(object);
+    return originalMaterial;
   }
 }

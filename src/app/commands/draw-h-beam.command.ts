@@ -1,9 +1,11 @@
+import { Injector } from "@angular/core";
 import { Group, Object3D, Quaternion, Vector3 } from "three";
+import { AngleSnappingUtils } from "../utils/angle-snapping.utils";
+import { LengthAngleIndicatorUtils } from "../utils/dimension-indicator.utils";
 import { HBeamData } from "../utils/three-object-creation/creators/h-beam.creator";
 import { CommandActionBase, MousePlacementCommand } from "./mouse-placement.command";
 
 export class DrawHBeamCommand extends MousePlacementCommand {
-
   private _b: number = 1;
   private _d: number = 1;
   private _t: number = 0.1;
@@ -11,8 +13,15 @@ export class DrawHBeamCommand extends MousePlacementCommand {
   private _xVector = new Vector3(1, 0, 0);
   private _hBeam!: Group;
   private _userData!: HBeamData
+  private _angleSnapping = new AngleSnappingUtils();
+  private _indicator: LengthAngleIndicatorUtils;
   override name: string = "H Beam";
   color: number = 0xB2B2B2;
+
+  constructor(injector: Injector) {
+    super(injector);
+    this._indicator = new LengthAngleIndicatorUtils(injector);
+  }
 
   protected override isFinished(mouseLocations: Vector3[]): boolean {
     super.isFinished(mouseLocations);
@@ -30,9 +39,26 @@ export class DrawHBeamCommand extends MousePlacementCommand {
       }, () => {
         this.removeFromScene(hBeam);
       }))
+
+    }
+    else {
+      if (mouseLocations.length > 0) {
+        const dimensions = this._indicator.cancel();
+        this._indicator.init(mouseLocations.at(-1)!);
+
+        dimensions.forEach(dimension => {
+          if (!dimension.parent) this.addToScene(dimension);
+        })
+      }
     }
 
     return isFinished;
+  }
+
+  override cancel(): void {
+    super.cancel();
+    const dimensions = this._indicator.cancel();
+    dimensions.forEach(dimension => this.removeFromScene(dimension));
   }
 
   protected override onCommandExecute(mouseLocations: Vector3[]): Object3D | null {
@@ -51,6 +77,10 @@ export class DrawHBeamCommand extends MousePlacementCommand {
     this._translateAndRotate(mouseLocations);
 
     if (!this._hBeam.parent) this.addToScene(this._hBeam);
+
+    if (mouseLocations.length > 1) {
+      this._indicator.onMousePositionUpdate(mouseLocations.at(-2)!, mouseLocations.at(-1)!);
+    }
 
     return this._hBeam;
   }
@@ -81,5 +111,14 @@ export class DrawHBeamCommand extends MousePlacementCommand {
     return length = mouseLocations[0].distanceTo(mouseLocations[1]);
   }
 
+  override onMouseMove(mouseLocation: Vector3): void {
+    if (this.mouseLocations.length > 1) this._angleSnapping.snapPoint(this.mouseLocations.at(-2)!, mouseLocation);
+    super.onMouseMove(mouseLocation);
+  }
+
+  override onMouseClick(mouseLocation: Vector3): void {
+    if (this.mouseLocations.length > 1) this._angleSnapping.snapPoint(this.mouseLocations.at(-2)!, mouseLocation);
+    super.onMouseClick(mouseLocation);
+  }
 
 }

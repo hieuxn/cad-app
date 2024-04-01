@@ -26,7 +26,7 @@ export class DXFConverter extends BaseConverter {
 
   async _deserialize(text: string): Promise<Object3D[]> {
     const dxfObjects = await new Parser().parse(text);
-
+    // const str = JSON.stringify(dxfObjects, null, 2);
     const object3Ds: Object3D[] = [];
     const context = new DxfParserContext(dxfObjects, this._lengthUtils, this._materialUtils);
 
