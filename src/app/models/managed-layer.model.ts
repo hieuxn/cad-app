@@ -53,12 +53,13 @@ export class ManagedLayer {
 	addObjects(objects: Object3D[] | Object3D, useQuadTree: boolean = true): void {
 		objects = objects instanceof Array ? objects : [objects]
 		for (const item of objects) {
-			this.setLayer(item, this.id);
 			if (this.objects.get(item.uuid)) {
 				// throw new Error("Duplicated uuid");
 				console.log('already been added')
+				return;
 			}
-			
+
+			this.setLayer(item, this.id);
 			this.objects.set(item.uuid, item);
 
 			this._scene.add(item);
@@ -116,6 +117,8 @@ export class ManagedLayer {
 	removeObjects(objects: Object3D[] | Object3D, useQuadTree: boolean = true): void {
 		objects = objects instanceof Array ? objects : [objects]
 		for (const item of objects) {
+			if (!this._scene.getObjectById(item.id)) continue;
+
 			this.unsetLayer(item);
 
 			this._scene.remove(item);

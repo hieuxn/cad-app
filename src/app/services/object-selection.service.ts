@@ -30,6 +30,7 @@ export class ObjectSelectionService extends ThreeViewLifecycleBase {
   private _selectionBoxes = new Map<string, SelectionBox>()
   private _isLeftCicked = false;
   private _threeUtils = new ThreeUtils();
+  private _selectionBoxSubscription = new Subscription();
 
   selectedObjects$ = this._selectedObjectsSubject.items$;
   hoveredObjects$ = this._hoveredObjectsSubject.items$;
@@ -62,9 +63,10 @@ export class ObjectSelectionService extends ThreeViewLifecycleBase {
   }
 
   activate() {
-    this.enableSelectionBox(true);
 
     if (this.subscription.closed) this.subscription = new Subscription();
+
+    this.enableSelectionBox();
 
     let sub = this._layerService.activeLayer$.subscribe(this._onActiveLayerChanged.bind(this));
 
@@ -93,14 +95,21 @@ export class ObjectSelectionService extends ThreeViewLifecycleBase {
     });
     this.subscription.add(sub);
 
-    sub = this._mouseService.mouseDown$.subscribe(this._onSelectionBoxStart.bind(this));
-    this.subscription.add(sub);
+  }
+
+  enableSelectionBox() {
+    this._selectionHelper.enabled = true;
+
+    if (this._selectionBoxSubscription.closed) this._selectionBoxSubscription = new Subscription();
+
+    let sub = this._mouseService.mouseDown$.subscribe(this._onSelectionBoxStart.bind(this));
+    this._selectionBoxSubscription.add(sub);
 
     sub = this._mouseService.mouseMove$.subscribe(this._onSelectionBoxUpdate.bind(this));
-    this.subscription.add(sub);
+    this._selectionBoxSubscription.add(sub);
 
     sub = this._mouseService.mouseUp$.subscribe(this._onSelectionBoxFinish.bind(this));
-    this.subscription.add(sub);
+    this._selectionBoxSubscription.add(sub);
 
     sub = this._mainViewService.onCameraChanged$.subscribe(event => {
       const newCamera = event.camera;
@@ -109,15 +118,16 @@ export class ObjectSelectionService extends ThreeViewLifecycleBase {
       }
       this._selectionBox = this._selectionBoxes.get(newCamera.type)!;
     });
-    this.subscription.add(sub);
+    this._selectionBoxSubscription.add(sub);
   }
 
-  enableSelectionBox(enable: boolean) {
-    this._selectionHelper.enabled = enable;
+  disableSelectionBox() {
+    this._selectionHelper.enabled = false;
+    this._selectionBoxSubscription.unsubscribe();
   }
 
   deactivate() {
-    this.enableSelectionBox(false);
+    this.disableSelectionBox();
     this.subscription?.unsubscribe();
   }
 
@@ -180,7 +190,7 @@ export class ObjectSelectionService extends ThreeViewLifecycleBase {
     const objs = this._layerService.activeLayer.object3Ds;
     const intersections = this._raycaster.intersectObjects(objs, true);
     if (intersections.length === 0) {
-      this._unhoverAll(true);
+      this.unhoverAll(true);
     }
 
     let resetHover = true;
@@ -198,7 +208,7 @@ export class ObjectSelectionService extends ThreeViewLifecycleBase {
 
           if (resetHover) {
             resetHover = false;
-            this._unhoverAll(true);
+            this.unhoverAll(true);
           }
 
           const originalMaterial = this.selectedObjectMap.get(obj.uuid)?.[1] || obj.material.clone();
@@ -212,7 +222,7 @@ export class ObjectSelectionService extends ThreeViewLifecycleBase {
     }
   }
 
-  private _unhoverAll(notify: boolean) {
+  unhoverAll(notify: boolean) {
     const notifyObjs: Object3D[] = [];
 
     for (const [key, [obj, material]] of this._hoveredObjectMap) {
@@ -237,7 +247,9 @@ export class ObjectSelectionService extends ThreeViewLifecycleBase {
     const intersections = this._raycaster.intersectObjects(objs, true);
 
     if (intersections.length > 0) {
-      const parent = this._threeUtils.getParentGroup(intersections[0].object); // Select the first intersected object
+      const intersection = intersections.find(obj => obj.object.userData['selectable'] ?? true);
+      if (!intersection) return;
+      const parent = this._threeUtils.getParentGroup(intersection.object); // Select the first intersected object
       if (!parent) return;
 
       let deselectAll = true;
@@ -258,7 +270,7 @@ export class ObjectSelectionService extends ThreeViewLifecycleBase {
         else {
           if (deselectAll) {
             deselectAll = false;
-            this._unhoverAll(true);
+            this.unhoverAll(true);
             this.deselectAll(true);
           }
           selectObjs.push(obj);
@@ -275,8 +287,11 @@ export class ObjectSelectionService extends ThreeViewLifecycleBase {
   select(objects: Object3D[], notify: boolean): number {
     const oldSize = this.selectedObjectMap.size;
     const notifyObjs: Object3D[] = []
+    // const map = new Map<string, [Object3D, Material]>();
 
     for (const obj of objects) {
+      if (false === obj.userData['selectable']) continue;
+
       const originalMaterial = this._unhover(obj);
       if (!originalMaterial) continue;
 
@@ -291,6 +306,8 @@ export class ObjectSelectionService extends ThreeViewLifecycleBase {
       // this._notify(notifyObjs, 'remove', 'hover');
       this._notify(notifyObjs, 'add', 'selection');
     }
+
+    // map.forEach((value, key) => this.selectedObjectMap.set(key, value));
 
     return notifyObjs.length;
   }
@@ -364,6 +381,6 @@ export class ObjectSelectionService extends ThreeViewLifecycleBase {
       method(parent);
     }
 
-    console.log(selection + ' ' + add + ' ' + parents.size);
+    // console.log(selection + ' ' + add + ' ' + parents.size);
   }
 }
