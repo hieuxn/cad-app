@@ -3,7 +3,8 @@ import { Subscription } from "rxjs";
 import { BufferGeometry, EllipseCurve, Group, Line, LineBasicMaterial, LineDashedMaterial, OrthographicCamera, PerspectiveCamera, Quaternion, Sprite, SpriteMaterial, Texture, Vector3 } from "three";
 import { MainView3DService } from "../services/main-view-3d.service";
 import { SINGLETON_MOUSE_SERVICE_TOKEN } from "../services/mouse.service";
-class IndicatorUtils {
+
+export class IndicatorUtils {
   static readonly xVector = new Vector3(1, 0, 0);
   static scaleFactor = 1;
   static maxTextLength = 32;

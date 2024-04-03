@@ -53,8 +53,12 @@ export class ManagedLayer {
 	addObjects(objects: Object3D[] | Object3D, useQuadTree: boolean = true): void {
 		objects = objects instanceof Array ? objects : [objects]
 		for (const item of objects) {
-			this._setLayer(item, this.id);
-			if (this.objects.get(item.uuid)) throw new Error("Duplicated uuid");
+			this.setLayer(item, this.id);
+			if (this.objects.get(item.uuid)) {
+				// throw new Error("Duplicated uuid");
+				console.log('already been added')
+			}
+			
 			this.objects.set(item.uuid, item);
 
 			this._scene.add(item);
@@ -68,11 +72,11 @@ export class ManagedLayer {
 		}
 	}
 
-	private _setLayer(object: Object3D, id: number) {
+	setLayer(object: Object3D, id: number) {
 		const offset = this._threeUtils.getSetBitPositions(object.layers.mask)[0];
 		object.layers.set(id + offset);
 		if (object.children.length > 0) {
-			object.children.forEach(c => this._setLayer(c, id));
+			object.children.forEach(c => this.setLayer(c, id));
 		}
 	}
 

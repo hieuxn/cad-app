@@ -70,7 +70,7 @@ export class ContextMenuService extends ThreeViewLifecycleBase {
                 group.push(obj);
             }
 
-            this._selectionService.deselectAll();
+            this._selectionService.deselectAll(true);
             this._familyCreatorService.openFamilyCreatorDialog(group);
         }, false);
 

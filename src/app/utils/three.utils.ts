@@ -24,4 +24,8 @@ export class ThreeUtils {
 
     return positions;
   }
+
+  flatChildren(object: Object3D): Object3D[] {
+    return object.children.flatMap(c => this.flatChildren(c).concat(c));
+  }
 }

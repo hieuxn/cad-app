@@ -12,18 +12,18 @@ export class CameraChangedEvent {
 @Injectable({ providedIn: 'root' })
 export class MainView3DService {
   private _controlsMap: Map<string, OrbitControls> = new Map<string, OrbitControls>();
-  private _perspectiveCamera!: PerspectiveCamera;
-  private _orthographicCamera!: OrthographicCamera;
   private _clock: Clock = new Clock();
   private _onCameraChanged = new Subject<CameraChangedEvent>();
   private _viewReadySubject = new Subject<MainView3DService>();
   private _destroy = new Subject<void>();
-
+  
   viewReady$ = this._viewReadySubject.asObservable().pipe(takeUntil(this._destroy));
   onCameraChanged$ = this._onCameraChanged.asObservable().pipe(takeUntil(this._destroy));
   destroy$ = this._destroy.asObservable();
   scene!: Scene;
   activeCamera!: Camera;
+  perspectiveCamera!: PerspectiveCamera;
+  orthographicCamera!: OrthographicCamera;
   renderer!: WebGLRenderer;
   readonly defaultChildCount = 4;
 
@@ -39,15 +39,15 @@ export class MainView3DService {
   }
 
   switchCamera() {
-    if (this.activeCamera === this._orthographicCamera) {
-      this.activeCamera = this._perspectiveCamera;
+    if (this.activeCamera === this.orthographicCamera) {
+      this.activeCamera = this.perspectiveCamera;
     } else {
-      this.activeCamera = this._orthographicCamera;
+      this.activeCamera = this.orthographicCamera;
     }
 
     const init = this._initControl(this.activeCamera.type);
     if (init) {
-      if (this.activeCamera === this._perspectiveCamera) {
+      if (this.activeCamera === this.perspectiveCamera) {
         this.activeCamera.position.set(0, -10, 5);
       }
       else {
@@ -62,7 +62,7 @@ export class MainView3DService {
       item.reset();
     });
 
-    if (this.activeCamera === this._perspectiveCamera) {
+    if (this.activeCamera === this.perspectiveCamera) {
       this.activeCamera.position.set(0, -10, 5);
     }
     else {
@@ -103,13 +103,13 @@ export class MainView3DService {
 
     const width = container.clientWidth;
     const height = container.clientHeight;
-    this._perspectiveCamera = new PerspectiveCamera(75, width / height, 0.1, 1000);
+    this.perspectiveCamera = new PerspectiveCamera(75, width / height, 0.1, 1000);
 
     const scale = 2 * 64;
-    this._orthographicCamera = new OrthographicCamera(-width / scale, width / scale, height / scale, -height / scale, 0.1, 1000);
+    this.orthographicCamera = new OrthographicCamera(-width / scale, width / scale, height / scale, -height / scale, 0.1, 1000);
 
     // Sync layers
-    this._perspectiveCamera.layers = this._orthographicCamera.layers;
+    this.perspectiveCamera.layers = this.orthographicCamera.layers;
 
     this.switchCamera();
 

@@ -25,7 +25,7 @@ export class FileManagementComponent {
   private _dataId: string = 'threejs';
   private _indexedDbService: IndexedDbService;
   private _objectCreator: ThreeObjectCreationService;
-	private _selectionService: ObjectSelectionService;
+  private _selectionService: ObjectSelectionService;
 
 
   constructor(injector: Injector) {
@@ -73,8 +73,8 @@ export class FileManagementComponent {
   async save() {
     try {
       // To revert all selected materials
-      this._selectionService.deselectAll();
-      
+      this._selectionService.deselectAll(true);
+
       const objects: any[] = [];
       this._mainViewService.object3Ds.slice(this._mainViewService.defaultChildCount).forEach(obj => {
         if (obj instanceof Group && Object.keys(obj.userData).length > 0) {

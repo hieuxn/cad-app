@@ -10,6 +10,9 @@ import { LayerService } from "./layer.service";
 import { MainView3DService } from "./main-view-3d.service";
 import { MouseService, SINGLETON_MOUSE_SERVICE_TOKEN } from "./mouse.service";
 
+export type selectionOrHover = 'selection' | 'hover';
+export type addOrRemove = 'add' | 'remove'
+
 @Injectable({ providedIn: 'root' })
 export class ObjectSelectionService extends ThreeViewLifecycleBase {
   private _selectedObjectsSubject = new ObservableSlim<Object3D>();
@@ -67,7 +70,7 @@ export class ObjectSelectionService extends ThreeViewLifecycleBase {
 
     sub = this._mouseService.mouseMove$.subscribe(event => {
       const mousePosition = this._layerService.getMouseNDC(event);
-      if (false == this._hover(mousePosition)) this._unhover();
+      this._hover(mousePosition);
     });
     this.subscription.add(sub);
 
@@ -90,7 +93,7 @@ export class ObjectSelectionService extends ThreeViewLifecycleBase {
     });
     this.subscription.add(sub);
 
-    sub = this._mouseService.mouseDown$.subscribe(this._onSelectionBoxDraw.bind(this));
+    sub = this._mouseService.mouseDown$.subscribe(this._onSelectionBoxStart.bind(this));
     this.subscription.add(sub);
 
     sub = this._mouseService.mouseMove$.subscribe(this._onSelectionBoxUpdate.bind(this));
@@ -123,15 +126,13 @@ export class ObjectSelectionService extends ThreeViewLifecycleBase {
     this._raycaster.layers.set(activeLayer.id + this._idOffset);
   }
 
-  private _onSelectionBoxDraw(event: MouseEvent) {
+  private _onSelectionBoxStart(event: MouseEvent) {
     if (event.button !== 0) {
       this._isLeftCicked = false;
       return;
     }
 
-    for (const item of this._selectionBox.collection) {
-      this.deselect(item);
-    }
+    this.deselect(this._selectionBox.collection, true);
 
     const mouse = this._layerService.getMouseNDC(event);
     this._selectionBox.startPoint.set(mouse.x, mouse.y, 0.5);
@@ -142,53 +143,53 @@ export class ObjectSelectionService extends ThreeViewLifecycleBase {
     if (false === this._isLeftCicked) {
       this._selectionHelper.element.style.display = 'none';
     }
+
     const activeId = this._layerService.activeLayer.id;
+
     if (this._selectionHelper.isDown) {
 
-      for (const item of this._selectionBox.collection) {
-        this.deselect(item);
-      }
+      this.deselect(this._selectionBox.collection, false);
 
       const mouse = this._layerService.getMouseNDC(event);
       this._selectionBox.endPoint.set(mouse.x, mouse.y, 0.5);
 
       const allSelected = this._selectionBox.select();
-      for (const item of allSelected) {
-        if (!item.layers.isEnabled(activeId + this._idOffset)) continue;
-        this.select(item);
-      }
+      this.select(allSelected.filter(item => item.layers.isEnabled(activeId + this._idOffset)), false);
     }
   }
 
   private _onSelectionBoxFinish(event: MouseEvent) {
     if (event.button !== 0) return;
+
     const activeId = this._layerService.activeLayer.id;
     const mouse = this._layerService.getMouseNDC(event);
     this._selectionBox.endPoint.set(mouse.x, mouse.y, 0.5);
 
     const allSelected = this._selectionBox.select();
-    for (const item of allSelected) {
-      if (!item.layers.isEnabled(activeId + this._idOffset)) continue;
-      this.select(item);
-    }
+
+    this._notify(allSelected.filter(item => item.layers.isEnabled(activeId + this._idOffset)), 'add', 'selection');
   }
 
-  private _hover(mouseNDC: Vector2): boolean {
-    if (this._selectionHelper.isDown) return false;
-    const activeId = this._layerService.activeLayer.id;
+
+  private _hover(mouseNDC: Vector2) {
+    if (this._selectionHelper.isDown) return;
 
     const camera = this._mainViewService.activeCamera;
     this._raycaster.setFromCamera(mouseNDC, camera)
 
     const objs = this._layerService.activeLayer.object3Ds;
     const intersections = this._raycaster.intersectObjects(objs, true);
+    if (intersections.length === 0) {
+      this._unhoverAll(true);
+    }
 
     let resetHover = true;
     for (const intersection of intersections) {
       const parent = this._threeUtils.getParentGroup(intersection.object);
       if (!parent) continue;
-      // if (!obj.layers.isEnabled(activeId + this._idOffset)) continue;
-      for (const obj of this._flatChildren(parent)) {
+
+      const hoverObjs: Object3D[] = [];
+      for (const obj of this._threeUtils.flatChildren(parent)) {
         if ('material' in obj
           && obj.material instanceof Material
           && obj.material !== this._hoveredMaterial
@@ -197,36 +198,38 @@ export class ObjectSelectionService extends ThreeViewLifecycleBase {
 
           if (resetHover) {
             resetHover = false;
-            this._unhover();
+            this._unhoverAll(true);
           }
 
           const originalMaterial = this.selectedObjectMap.get(obj.uuid)?.[1] || obj.material.clone();
-          // this._hoveredObjectMap.set(obj.uuid, [obj, originalMaterial]);
-          this._addToHover(obj, originalMaterial)
+          this._hoveredObjectMap.set(obj.uuid, [obj, originalMaterial]);
+          hoverObjs.push(obj);
           obj.material = this._hoveredMaterial;
-          // console.log('hover');
         }
       }
-      return true;
-    }
 
-    return intersections.length > 0;
+      if (hoverObjs.length > 0) this._notify(hoverObjs, 'add', 'hover');
+    }
   }
 
-  private _unhover() {
+  private _unhoverAll(notify: boolean) {
+    const notifyObjs: Object3D[] = [];
+
     for (const [key, [obj, material]] of this._hoveredObjectMap) {
-      if ('material' in obj && obj.material instanceof Material) {
+      if ('material' in obj
+        && obj.material instanceof Material
+        && material !== this._hoveredMaterial
+        && material !== this._selectedMaterial) {
         obj.material = material;
+        this._unhover(obj);
+        notifyObjs.push(obj);
       }
-      this._removeFromHover(obj);
     }
-    // this._hoveredObjectMap.clear();
+
+    if (notify) this._notify(notifyObjs, 'remove', 'hover');
   }
 
   private _handleSelection(mouseNDC: THREE.Vector2, multiSelect: boolean): void {
-    // if (this._selectionHelper.isDown) return;
-    const activeId = this._layerService.activeLayer.id;
-
     const camera = this._mainViewService.activeCamera;
     this._raycaster.setFromCamera(mouseNDC, camera)
 
@@ -238,72 +241,129 @@ export class ObjectSelectionService extends ThreeViewLifecycleBase {
       if (!parent) return;
 
       let deselectAll = true;
-      for (const obj of this._flatChildren(parent)) {
+      const selectObjs: Object3D[] = [];
+      const deselectObjs: Object3D[] = [];
+      for (const obj of this._threeUtils.flatChildren(parent)) {
         if (multiSelect) {
-          if (this.selectedObjectMap.has(obj.uuid)) this.deselect(obj)
-          else this.select(obj);
+          if (this.selectedObjectMap.has(obj.uuid)) {
+            deselectObjs.push(obj)
+          }
+          else {
+            selectObjs.push(obj);
+          }
         }
-        else if (this.selectedObjectMap.has(obj.uuid)) this.deselect(obj)
+        else if (this.selectedObjectMap.has(obj.uuid)) {
+          deselectObjs.push(obj);
+        }
         else {
           if (deselectAll) {
             deselectAll = false;
-            this._unhover();
-            this.deselectAll();
-            // console.log('select');
+            this._unhoverAll(true);
+            this.deselectAll(true);
           }
-          this.select(obj);
+          selectObjs.push(obj);
         }
       }
+
+      if (selectObjs.length > 0) this.select(selectObjs, true);
+      if (deselectObjs.length > 0) this.deselect(deselectObjs, true);
     }
-    else this.deselectAll();
+    else this.deselectAll(true);
   }
 
-  private _flatChildren(object: Object3D): Object3D[] {
-    return object.children.flatMap(c => this._flatChildren(c).concat(c));
+
+  select(objects: Object3D[], notify: boolean): number {
+    const oldSize = this.selectedObjectMap.size;
+    const notifyObjs: Object3D[] = []
+
+    for (const obj of objects) {
+      const originalMaterial = this._unhover(obj);
+      if (!originalMaterial) continue;
+
+      this.selectedObjectMap.set(obj.uuid, [obj, originalMaterial]);
+      (obj as any).material = this._selectedMaterial;
+
+      notifyObjs.push(obj);
+    }
+
+
+    if (notify && this.selectedObjectMap.size > oldSize) {
+      // this._notify(notifyObjs, 'remove', 'hover');
+      this._notify(notifyObjs, 'add', 'selection');
+    }
+
+    return notifyObjs.length;
   }
 
-  select(obj: Object3D) {
-    const originalMaterial = this._removeFromHover(obj);
-    if (!originalMaterial) return;
-    this._addToSelection(obj, originalMaterial);
-    (obj as any).material = this._selectedMaterial;
+  deselect(objects: Object3D[], notify: boolean): number {
+    const oldSize = this.selectedObjectMap.size;
+    const notifyObjs: Object3D[] = []
+
+    for (const obj of objects) {
+      if (!('material' in obj && obj.material instanceof Material)) continue;
+
+      const oldMaterial = this.selectedObjectMap.get(obj.uuid)?.[1];
+
+      if (undefined === oldMaterial) continue;
+
+      obj.material = oldMaterial;
+      this.selectedObjectMap.delete(obj.uuid);
+
+      notifyObjs.push(obj);
+    }
+
+    if (notify && this.selectedObjectMap.size < oldSize) {
+      this._notify(notifyObjs, 'remove', 'selection');
+    }
+
+    return notifyObjs.length;
   }
 
-  deselect(obj: Object3D) {
-    if (!('material' in obj && obj.material instanceof Material)) return;
-    const oldMaterial = this.selectedObjectMap.get(obj.uuid)?.[1];
-    if (undefined === oldMaterial) return;
-    obj.material = oldMaterial;
-    this.selectedObjectMap.delete(obj.uuid);
-  }
+  deselectAll(notify: boolean) {
+    const objects: Object3D[] = []
 
-  deselectAll() {
-    // console.log('deselectAll');
     this.selectedObjectMap.forEach(([selectedObj, mat], uuid) => {
       if (!('material' in selectedObj && selectedObj.material instanceof Material)) return;
+
       selectedObj.material = this.selectedObjectMap.get(uuid)?.[1];
       this.selectedObjectMap.delete(uuid);
+
+      objects.push(selectedObj);
     });
+
+    if (notify) this._notify(objects, 'remove', 'selection');
   }
 
-  private _addToSelection(object: Object3D, material: Material) {
-    this.selectedObjectMap.set(object.uuid, [object, material]);
-    this._selectedObjectsSubject.add(object);
-  }
-
-  private _addToHover(object: Object3D, material: Material) {
-    this._hoveredObjectMap.set(object.uuid, [object, material]);
-    this._hoveredObjectsSubject.add(object);
-  }
-
-  private _removeFromHover(object: Object3D): Material | null {
+  private _unhover(object: Object3D): Material | null {
     if (!('material' in object && object.material instanceof Material)) return null;
     if (object.material === this._selectedMaterial) return null;
+
     let originalMaterial = this._hoveredObjectMap.get(object.uuid)?.[1];
+
     if (undefined === originalMaterial) originalMaterial = object.material.clone();
     else this._hoveredObjectMap.delete(object.uuid);
 
     this._hoveredObjectsSubject.remove(object);
+
     return originalMaterial;
+  }
+
+  private _notify(objects: Object3D[], add: addOrRemove, selection: selectionOrHover) {
+    const parents = new Set<Object3D>();
+
+    for (const item of objects) {
+      const parent = this._threeUtils.getParentGroup(item);
+      if (parent) parents.add(parent);
+    }
+
+    if (parents.size === 0) return;
+
+    for (const parent of parents) {
+      const subject = selection === 'selection' ? this._selectedObjectsSubject : this._hoveredObjectsSubject;
+      const method = add === 'add' ? subject.add.bind(subject) : subject.remove.bind(subject);
+      method(parent);
+    }
+
+    console.log(selection + ' ' + add + ' ' + parents.size);
   }
 }
