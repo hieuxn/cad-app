@@ -1,36 +1,67 @@
-.sidebar-panel {
-  background-color: #333;
-  height: 100vh;
-  padding: 20px;
-  box-sizing: border-box;
-}
+// .sidebar-panel {
+//   background-color: #333;
+//   // height: 100vh;
+//   padding: 20px;
+//   box-sizing: border-box;
+// }
 
-.sidebar-panel ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
+// .mat-expansion-panel {
+//   background-color: #333;
+//   color: white;
+//   // padding: 20px;
+//   box-sizing: border-box;
+// }
 
-.sidebar-panel ul li {
-  display: flex;
-  align-items: center;
-  padding: 15px;
-  color: #ddd;
-  border-bottom: 1px solid #444;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
+// .sidebar-panel ul {
+//   list-style: none;
+//   padding: 0;
+//   margin: 0;
+// }
 
-.sidebar-panel ul li.active,
-.sidebar-panel ul li:hover {
-  background-color: #555;
-}
+// .sidebar-panel ul li {
+//   display: flex;
+//   align-items: center;
+//   padding: 15px;
+//   color: #ddd;
+//   border-bottom: 1px solid #444;
+//   cursor: pointer;
+//   transition: background-color 0.3s ease;
+// }
 
-.sidebar-panel ul li i {
-  margin-right: 5px;
-}
+// .sidebar-panel ul li.active,
+// .sidebar-panel ul li:hover {
+//   background-color: #555;
+// }
 
-.sidebar-panel ul li i {
-  width: 40px;
-  text-align: left;
-}
+// .sidebar-panel ul li i {
+//   margin-right: 5px;
+// }
+
+// .sidebar-panel ul li i {
+//   width: 40px;
+//   text-align: left;
+// }
+
+// ::ng-deep .mat-expansion-panel {
+//   box-shadow: none !important;
+//   border: none !important;
+//   width: 100%;
+// }
+
+// /* Remove the spacing and background for a flat style */
+// ::ng-deep .mat-expansion-panel .mat-expansion-panel-header {
+//   background-color: transparent !important;
+// }
+
+// /* Adjust padding as needed for content */
+// ::ng-deep .mat-expansion-panel .mat-expansion-panel-content {
+//   padding: 0 !important;
+// }
+
+// /* Adjust the styling for the panel title */
+// ::ng-deep .mat-expansion-panel .mat-expansion-panel-header-title {
+//   padding: 0 !important;
+//   color: white;
+// }
+
+

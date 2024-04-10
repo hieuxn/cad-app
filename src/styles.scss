@@ -30,3 +30,22 @@ body {
   scrollbar-width: none;
   /* Firefox */
 }
+
+html,
+body {
+  background-color: #333333;
+  color: white;
+}
+
+.horizontal {
+  display: flex;
+  // justify-content: space-between;
+  /* Aligns items with space between */
+}
+
+.icon {
+  margin-right: 5px;
+  width: 40px;
+  text-align: center;
+  margin-top: 20px;
+}

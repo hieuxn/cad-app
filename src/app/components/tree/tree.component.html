@@ -1,0 +1,27 @@
+<mat-tree [dataSource]="dataSource" [treeControl]="treeControl">
+  <mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle (click)="onLeafNodeClick(node)">
+    <span>
+      {{node.name}}
+    </span>
+  </mat-tree-node>
+
+  <mat-nested-tree-node *matTreeNodeDef="let node; when: hasChild">
+
+    <div class="mat-tree-node">
+      <span>
+        {{node.name}}
+      </span>
+      <button mat-icon-button matTreeNodeToggle [attr.aria-label]="'Toggle ' + node.name">
+        @if(treeControl.isExpanded(node)) {
+        <i class="fa-solid fa-caret-up"></i>
+        } @else {
+        <i class="fa-solid fa-caret-down"></i>
+        }
+      </button>
+    </div>
+
+    <div [class.mat-tree-invisible]="!treeControl.isExpanded(node)" role="group">
+      <ng-container matTreeNodeOutlet></ng-container>
+    </div>
+  </mat-nested-tree-node>
+</mat-tree>

@@ -44,17 +44,19 @@ export class DrawPolyLineCommand extends MousePlacementCommand {
 
   protected override isFinished(mouseLocations: Vector3[]): boolean {
     super.isFinished(mouseLocations);
-
+    
     if (!this._forceFinish) {
       const isPolylineClosed = mouseLocations.length >= 2 && mouseLocations[mouseLocations.length - 1].distanceToSquared(mouseLocations[0]) < 1E-2;
       if (isPolylineClosed) {
-        mouseLocations[mouseLocations.length - 1] = mouseLocations[0];
+        mouseLocations[mouseLocations.length - 1] = mouseLocations[0].clone();
         this.objectCreatorService.polyline.updatePoints(this._polyline);
         this._forceFinish = true;
       }
     }
-
+    
     if (this._forceFinish) {
+      this.objectCreatorService.polyline.fixPosition(this._polyline);
+      this._forceFinish = true;
       const polyline = this._polyline;
       this.commandService.addCommand(new CommandActionBase('Create Polyline', () => {
         this.addToScene(polyline);

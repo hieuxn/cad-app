@@ -3,6 +3,7 @@ import { BaseConverter } from "./base.converter";
 import { DXFConverter } from "./dxf-converter/dxf.converter";
 import { FBXConverter } from "./fbx-converter/fbx.converter";
 import { GLBConverter, GLTFConverter } from "./gltf-converter/gltf.converter";
+import { JsonConverter } from "./json-converter/json.converter";
 
 export class FileConverterUtils {
 
@@ -10,7 +11,8 @@ export class FileConverterUtils {
     ['dxf', new DXFConverter()],
     ['gltf', new GLTFConverter()],
     ['glb', new GLBConverter()],
-    ['fbx', new FBXConverter()]
+    ['fbx', new FBXConverter()],
+    ['json', new JsonConverter()]
   ]);
 
   async handleFileInput(event: Event): Promise<Object3D[]> {

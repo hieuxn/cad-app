@@ -31,9 +31,29 @@ export class PolylineCreator {
     line.geometry.dispose();
     line.geometry = geometry;
 
-    group.clear();
-    group.add(line);
+    return group;
+  }
 
+  fixPosition(group: Group): Group {
+    const { points, color } = group.userData;
+    const typedPoints: THREE.Vector3[] = points as THREE.Vector3[];
+
+    const center = new Vector3();
+    for (const point of typedPoints) {
+      center.add(point);
+    }
+
+    center.divideScalar(typedPoints.length);
+
+    typedPoints.forEach(p => p.sub(center));
+
+    const [line] = group.children as [Line];
+    const geometry = new BufferGeometry().setFromPoints(typedPoints);
+    line.geometry.dispose();
+    line.geometry = geometry;
+
+    group.position.copy(center);
+    
     return group;
   }
 }

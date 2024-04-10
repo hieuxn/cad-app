@@ -143,6 +143,8 @@ export class ManagedLayer {
 		});
 
 		toRemove.forEach(o => this._objectCollection.remove(o));
+		toRemove.forEach(o => this._scene.remove(o));
+		
 		this.objUtils.clear()
 		this.objects.clear();
 	}

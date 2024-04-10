@@ -37,16 +37,43 @@ input {
 
 .vector-container {
   display: flex;
-  flex-direction: column; /* Stack vector groups vertically */
+  flex-direction: column;
+  /* Stack vector groups vertically */
 }
 
 .vector-group {
-  display: flex; /* This will place child elements (inputs) in a row */
-  justify-content: space-between; /* Add space between the inputs */
-  margin-bottom: 8px; /* Optional: adds some space between rows for clarity */
+  display: flex;
+  /* This will place child elements (inputs) in a row */
+  justify-content: space-between;
+  /* Add space between the inputs */
+  margin-bottom: 8px;
+  /* Optional: adds some space between rows for clarity */
 }
 
 .vector-input {
-  flex: 1; /* Each input will take equal width */
-  margin: 0 4px; /* Optional: adds some space between the inputs */
+  flex: 1;
+  /* Each input will take equal width */
+  margin: 0 4px;
+  /* Optional: adds some space between the inputs */
+}
+
+.row-form {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  width: 100%;
+  justify-content: space-between;
+
+  input[type="text"] {
+    flex: 1;
+    margin-left: 5px;
+    margin-right: 2px;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+
+    &:first-child {
+      margin-right: 6px;
+    }
+  }
 }

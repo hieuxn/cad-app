@@ -1,7 +1,9 @@
 import { CommonModule, NgIf } from '@angular/common';
 import { AfterViewInit, Component, Injector } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
 import { ColorPickerModule } from 'ngx-color-picker';
 import { Group, Object3D, Vector3, Vector3Like } from 'three';
@@ -27,7 +29,7 @@ export interface ObjectData {
   selector: 'app-object-information',
   standalone: true,
   imports: [MatTableModule, TitleSpacingPipe, MatInputModule, ReactiveFormsModule, NgIf, AutofocusDirective,
-    ColorPickerModule, FormsModule, CommonModule, ClickOutsideDirective],
+    ColorPickerModule, FormsModule, CommonModule, ClickOutsideDirective, MatButtonModule],
   templateUrl: './object-information.component.html',
   styleUrl: './object-information.component.scss'
 })
@@ -43,6 +45,9 @@ export class ObjectInformationComponent implements AfterViewInit {
   private _selectionService: ObjectSelectionService;
   private _layerService: LayerService;
   private _commandService: CommandManagerService;
+  private _snackBar: MatSnackBar;
+  newKey = '';
+  newValue = '';
 
   get rows(): FormArray {
     return this.tableForm.get('rows') as FormArray;
@@ -51,6 +56,7 @@ export class ObjectInformationComponent implements AfterViewInit {
   constructor(private injector: Injector) {
     this._sidebarService = injector.get(SidebarService);
     this._formBuilder = injector.get(FormBuilder);
+    this._snackBar = injector.get(MatSnackBar);
     this._objectCreatorService = injector.get(ThreeObjectCreationService);
     this._familyCreatorService = injector.get(FamilyCreatorService);
     this._selectionService = injector.get(ObjectSelectionService);
@@ -66,6 +72,7 @@ export class ObjectInformationComponent implements AfterViewInit {
         this._buildForm(item.changedItem);
         if (this.rows.length > 0) this._sidebarService.selectTab('info', true);
       }
+      else this.rows.clear();
     });
   }
 
@@ -106,6 +113,59 @@ export class ObjectInformationComponent implements AfterViewInit {
       return `#${color.toString(16)}`;
     }
     return color;
+  }
+
+  addRow() {
+    if (!this.newKey || !this.newValue) return;
+
+    const key = this.newKey.toLowerCase()
+    const obj = this.rows.at(-1)?.get('object')?.value;
+
+    if (!obj || obj.userData[key]) {
+      this._snackBar.open('Duplicated key, operation is cancelled!', 'Close', { duration: 3000 });
+      return;
+    }
+
+    obj.userData = { ...obj.userData, [key]: parseFloat(this.newValue) || this.newValue }
+    this.tableForm = this._formBuilder.group({ rows: this._formBuilder.array([]) });
+    this._buildForm(obj);
+
+    this.newKey = '';
+    this.newValue = '';
+
+    this._commandService.addCommand(new CommandActionBase(`Add property ${key}`,() => {
+      obj.userData = { ...obj.userData, [key]: parseFloat(this.newValue) || this.newValue };
+
+      this.tableForm = this._formBuilder.group({ rows: this._formBuilder.array([]) });
+      this._buildForm(obj);
+    }, () => {
+      delete obj.userData[key];
+
+      this.tableForm = this._formBuilder.group({ rows: this._formBuilder.array([]) });
+      this._buildForm(obj);
+    }))
+  }
+
+  removeRow(element: FormGroup) {
+    const obj = element.get('object')?.value;
+    const key = element.get('name')?.value;
+    if (!obj || !key) return;
+    delete obj.userData[key]
+    
+    this.tableForm = this._formBuilder.group({ rows: this._formBuilder.array([]) });
+    this._buildForm(obj);
+
+    this._commandService.addCommand(new CommandActionBase(`Remove property ${key}`,() => {
+      delete obj.userData[key];
+      
+      this.tableForm = this._formBuilder.group({ rows: this._formBuilder.array([]) });
+      this._buildForm(obj);
+    }, () => {
+      obj.userData = { ...obj.userData, [key]: parseFloat(this.newValue) || this.newValue };
+
+      this.tableForm = this._formBuilder.group({ rows: this._formBuilder.array([]) });
+      this._buildForm(obj);
+    }))
   }
 
   isVector(value: any): boolean {

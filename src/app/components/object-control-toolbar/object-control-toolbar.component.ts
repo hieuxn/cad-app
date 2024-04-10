@@ -10,6 +10,7 @@ import { LayerService } from '../../services/layer.service';
 import { MainView3DService } from '../../services/main-view-3d.service';
 import { MouseService, SINGLETON_MOUSE_SERVICE_TOKEN } from '../../services/mouse.service';
 import { ObjectSelectionService } from '../../services/object-selection.service';
+import { ThreeObjectCreationService } from '../../services/three-object-creation.service';
 import { IndicatorUtils } from '../../utils/dimension-indicator.utils';
 import { ThreeUtils } from '../../utils/three.utils';
 
@@ -49,6 +50,7 @@ export class ObjectControlToolbarComponent extends ThreeViewLifecycleBase {
 
   cursor() {
     this.activeTool = 'cursor';
+    this._selectionService.deselectAll(false);
     this._selectionService.enableSelectionBox();
     this._dragControls.deactivate();
     this._rotateControls.deactivate();
@@ -56,6 +58,7 @@ export class ObjectControlToolbarComponent extends ThreeViewLifecycleBase {
 
   move() {
     this.activeTool = 'move';
+    this._selectionService.deselectAll(false);
     this._selectionService.disableSelectionBox();
     this._dragControls.activate();
     this._rotateControls.deactivate();
@@ -63,6 +66,7 @@ export class ObjectControlToolbarComponent extends ThreeViewLifecycleBase {
 
   rotate() {
     this.activeTool = 'rotate';
+    this._selectionService.deselectAll(false);
     this._selectionService.disableSelectionBox();
     this._dragControls.deactivate();
     this._rotateControls.activate();
@@ -220,6 +224,7 @@ class RotateControls {
   private _threeUtils = new ThreeUtils();
   private _gizmo2: Group;
   private _selectedObjects: Object3D[] = [];
+  private _objectCreatorService: ThreeObjectCreationService;
 
   constructor(private _injector: Injector) {
     this._mainView3DService = _injector.get(MainView3DService);
@@ -228,6 +233,7 @@ class RotateControls {
     this._commandService = _injector.get(CommandManagerService);
     this._gizmo2 = this._create2DGizmo();
     this._selectionService = _injector.get(ObjectSelectionService);
+    this._objectCreatorService = _injector.get(ThreeObjectCreationService);
   }
 
   private _create2DGizmo(): Group {
