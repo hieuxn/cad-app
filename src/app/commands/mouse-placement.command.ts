@@ -7,7 +7,8 @@ import { ContextMenuService } from '../services/context-menu.service';
 import { CoordinateService } from '../services/coordinate.service';
 import { LayerService } from '../services/layer.service';
 import { MouseService, SINGLETON_MOUSE_SERVICE_TOKEN } from '../services/mouse.service';
-import { ThreeObjectCreationService } from '../services/three-object-creation.service';
+import { ObjectControlService } from '../services/object-control.service';
+import { ObjectCreationService } from '../services/object-creation.service';
 import { ContextMenuCommandBase, ContextMenuGenericCommand } from './context-menu.command';
 
 export abstract class CommandBase {
@@ -34,13 +35,14 @@ export abstract class MousePlacementCommand {
   protected subscriptions: Subscription | null = null;
   protected contextMenuCommmands: ContextMenuCommandBase[] = [];
   protected contextMenuService: ContextMenuService;
-  protected objectCreatorService: ThreeObjectCreationService;
+  protected objectCreatorService: ObjectCreationService;
   protected showPreviewWithoutClicking: boolean = false;
   protected _layerService: LayerService;
   private _object3D: Object3D | null = null;
   private _mouseUpCount: number = 0;
   private _coordinateService: CoordinateService;
   private _mouseService: MouseService;
+  private _objectControlService: ObjectControlService;
   protected commandService: CommandManagerService;
 
   constructor(injector: Injector) {
@@ -49,11 +51,13 @@ export abstract class MousePlacementCommand {
     this._layerService = injector.get(LayerService);
     this.commandService = injector.get(CommandManagerService);
     this.contextMenuService = injector.get(ContextMenuService);
-    this.objectCreatorService = injector.get(ThreeObjectCreationService);
+    this._objectControlService= injector.get(ObjectControlService);
+    this.objectCreatorService = injector.get(ObjectCreationService);
     this.onInit();
   }
 
   execute(): any {
+    this._objectControlService.cursor();
     this._initEvents();
   }
 

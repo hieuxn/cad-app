@@ -8,7 +8,7 @@ import { ThreeObjectCreationUtils } from "../utils/three-object-creation/three-o
 export type geometryObject = 'cylinder' | 'polyline'
 
 @Injectable({ providedIn: 'root' })
-export class ThreeObjectCreationService {
+export class ObjectCreationService {
   private _creator = new ThreeObjectCreationUtils();
   cylinder = this._creator.cylinder;
   hBeam = this._creator.hBeam;

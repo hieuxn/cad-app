@@ -14,9 +14,9 @@ import { TitleSpacingPipe } from '../../pipes/title-spacing.pipe';
 import { CommandManagerService } from '../../services/command-manager.service';
 import { FamilyCreatorService } from '../../services/family-creator.service';
 import { LayerService } from '../../services/layer.service';
+import { ObjectCreationService } from '../../services/object-creation.service';
 import { ObjectSelectionService } from '../../services/object-selection.service';
 import { SidebarService } from '../../services/sidebar.service';
-import { ThreeObjectCreationService } from '../../services/three-object-creation.service';
 import { ThreeUtils } from '../../utils/three.utils';
 
 export interface ObjectData {
@@ -39,7 +39,7 @@ export class ObjectInformationComponent implements AfterViewInit {
   editingIndex: number | null = null;
   private _sidebarService: SidebarService;
   private _formBuilder: FormBuilder
-  private _objectCreatorService: ThreeObjectCreationService;
+  private _objectCreatorService: ObjectCreationService;
   private _familyCreatorService: FamilyCreatorService;
   private _threeUtils = new ThreeUtils();
   private _selectionService: ObjectSelectionService;
@@ -57,7 +57,7 @@ export class ObjectInformationComponent implements AfterViewInit {
     this._sidebarService = injector.get(SidebarService);
     this._formBuilder = injector.get(FormBuilder);
     this._snackBar = injector.get(MatSnackBar);
-    this._objectCreatorService = injector.get(ThreeObjectCreationService);
+    this._objectCreatorService = injector.get(ObjectCreationService);
     this._familyCreatorService = injector.get(FamilyCreatorService);
     this._selectionService = injector.get(ObjectSelectionService);
     this._layerService = injector.get(LayerService);

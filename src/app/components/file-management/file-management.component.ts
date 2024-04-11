@@ -11,8 +11,9 @@ import { FileConveterService } from '../../services/file-converter.service';
 import { IndexedDbService } from '../../services/indexed-db.service';
 import { LayerService } from '../../services/layer.service';
 import { MainView3DService } from '../../services/main-view-3d.service';
+import { ObjectControlService } from '../../services/object-control.service';
+import { ObjectCreationService } from '../../services/object-creation.service';
 import { ObjectSelectionService } from '../../services/object-selection.service';
-import { ThreeObjectCreationService } from '../../services/three-object-creation.service';
 import { Node, Tree } from '../tree/tree.component';
 
 enum Action {
@@ -46,8 +47,9 @@ export class FileManagementComponent {
   private _layerService: LayerService;
   private _dataId: string = 'threejs';
   private _indexedDbService: IndexedDbService;
-  private _objectCreator: ThreeObjectCreationService;
+  private _objectCreator: ObjectCreationService;
   private _selectionService: ObjectSelectionService;
+  private _objectControlService: ObjectControlService;
   selectedExtension: supportedExtensions = 'json';
   data: Node[] = TREE_DATA;
   @ViewChild('fileInput') myInputRef!: ElementRef;
@@ -58,8 +60,9 @@ export class FileManagementComponent {
     this._layerService = injector.get(LayerService);
     this._indexedDbService = injector.get(IndexedDbService);
     this._mainViewService = injector.get(MainView3DService);
-    this._objectCreator = injector.get(ThreeObjectCreationService);
+    this._objectCreator = injector.get(ObjectCreationService);
     this._selectionService = injector.get(ObjectSelectionService);
+    this._objectControlService = injector.get(ObjectControlService);
   }
 
   async nodeClickedHanlder(node: Node) {
@@ -84,7 +87,7 @@ export class FileManagementComponent {
     try {
       const result = await this._converterService.handleFileInput(event);
       if (null === result) return;
-      
+
       for (const obj of result) {
         const userData = obj.userData
         if (userData && userData['name'] && userData['matrix']) {
@@ -105,7 +108,8 @@ export class FileManagementComponent {
   }
 
   async export(fileExt: string) {
-    // TODO: get necessary objects to export
+    this._objectControlService.cursor();
+
     const objects = this._mainViewService.object3Ds.slice(this._mainViewService.defaultChildCount).map(obj => obj.clone());
     objects.forEach(obj => {
       this._layerService.activeLayer.unsetLayer(obj);
