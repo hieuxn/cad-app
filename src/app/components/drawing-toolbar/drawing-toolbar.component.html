@@ -1,7 +1,4 @@
-<div class="toolbar">
-  @for (command of commands; track command.name; ; let even = $even ) {
-  <button mat-flat-button [color]="even ? 'primary': 'accent'" (click)="this.execute(command)">{{command.name}}</button>
-  } @empty {
-  Empty list of commands
-  }
-</div>
+<app-tree [data]="data" (nodeClick)="nodeClick($event)"></app-tree>
+<!-- <svg viewBox="0 0 100 50" xmlns="http://www.w3.org/2000/svg">
+  <polyline points="20,15 50,35 80,15" stroke="#fff" stroke-width="4" fill="none" />
+</svg> -->

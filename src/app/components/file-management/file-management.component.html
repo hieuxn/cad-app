@@ -1,33 +1,3 @@
 <input type="file" #fileInput hidden (change)="handleFileInput($event)" appAcceptFiles>
-
-<!-- <div class="sidebar-panel">
-  <ul>
-    <li (click)="fileInput.click()"><i class="fa-solid fa-folder-open"></i>Choose File</li>
-    <div class="horizontal">
-      <mat-accordion multi="true">
-        <mat-expansion-panel>
-          <mat-expansion-panel-header>
-            <mat-panel-title>
-              <i class="fa-solid fa-download icon"></i>
-              Export
-            </mat-panel-title>
-          </mat-expansion-panel-header>
-          <div class="sidebar-panel">
-            <ul>
-              <li (click)="export('dxf')">DXF (.dxf)</li>
-              <li (click)="export('gltf')">GLTF (.gltf)</li>
-              <li (click)="export('glb')">GLB (.glb)</li>
-              <li (click)="export('fbx')">FBX (.fbx)</li>
-              <li (click)="export('json')">JSON (.json)</li>
-            </ul>
-          </div>
-        </mat-expansion-panel>
-      </mat-accordion>
-    </div>
-    <li (click)="save()"><i class="fa-solid fa-floppy-disk"></i>Save Scene</li>
-    <li (click)="clear()"><i class="fa-solid fa-eraser"></i>Clear Scene</li>
-  </ul>
-  
-</div> -->
-
+<input type="file" #fileSymbol hidden (change)="importJson($event)" appAcceptFiles>
 <app-tree [data]="data" (nodeClick)="nodeClickedHanlder($event)"></app-tree>

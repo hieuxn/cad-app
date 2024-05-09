@@ -59,14 +59,18 @@ export class CoordinateService {
   }
 
   snapVec3(position: Vector3) {
-    position.set(+this.snap(position.x), +this.snap(position.y), +this.snap(position.z));
+    position.set(this.snap(position.x), this.snap(position.y), this.snap(position.z));
   }
 
   round(num: number): number {
     return Math.round((num + Number.EPSILON) * this._tenths) / this._tenths;
   }
 
-  snap(number: number): string {
-    return number.toFixed(this._precision);
+  snap(number: number): number {
+    const factor = Math.pow(10, this._precision);
+    const round = Math.round(number * factor) / factor;
+    console.log(round);
+    return round;
+    // return number.toFixed(this._precision);
   }
 }

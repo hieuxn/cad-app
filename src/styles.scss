@@ -1,4 +1,6 @@
 /* You can add global styles to this file, and also import other style files */
+@import 'variables';
+@import 'mixins';
 
 html,
 body {
@@ -14,7 +16,7 @@ body {
   position: absolute;
   pointer-events: none;
   border: 1px solid #fff;
-  background: rgba(0, 0, 155, 0.1);
+  @include default-color();
   z-index: 100;
 }
 
@@ -33,14 +35,7 @@ body {
 
 html,
 body {
-  background-color: #333333;
-  color: white;
-}
-
-.horizontal {
-  display: flex;
-  // justify-content: space-between;
-  /* Aligns items with space between */
+  @include default-color();
 }
 
 .icon {

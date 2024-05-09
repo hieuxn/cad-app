@@ -1,0 +1,96 @@
+<div class="dialog-container">
+    <h1>Edit User Data</h1>
+    <form>
+
+        <select id="objectSelect" (change)="onSelectObject($event)">
+            <option *ngFor="let obj of objects;" [value]="getUniqueName(obj)">{{getUniqueName(obj)}}</option>
+        </select>
+        <label>
+            Family Category:
+            {{ userData.familyCategory }}
+        </label>
+        <label>
+            Family Name:
+            {{userData.familyName }}
+        </label>
+        <label>
+            Family Symbol Name:
+            {{ userData.familySymbolName }}
+        </label>
+        <h2>Parameters</h2>
+        <div class="parameters-container">
+            <div class="parameters-container2">
+                @if (instanceParameters.length > 0) {
+                <label>Instance parameters</label>
+                <div class="scrollable-list">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Value</th>
+                                <th>Type</th>
+                                <th>Group</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let param of instanceParameters; let i = index">
+                                <td>
+                                    {{param.name}}
+                                </td>
+                                <td>
+                                    <input type="text" [(ngModel)]="param.value" name="instanceParameters{{i}}"
+                                        (ngModelChange)="handleParameterChange(i, $event, 'value', true)" />
+                                </td>
+                                <td>
+                                    {{param.type}}
+                                </td>
+                                <td>
+                                    {{param.group}}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                </div>
+                }
+
+                @if (typeParameters.length > 0) {
+                <label>Type parameters</label>
+                <div class="scrollable-list">
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Value</th>
+                                <th>Type</th>
+                                <th>Group</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let param of typeParameters; let i = index">
+                                <td>
+                                    {{param.name}}
+                                </td>
+                                <td>
+                                    <input type="text" [(ngModel)]="param.value" name="typeParameters{{i}}"
+                                        (ngModelChange)="handleParameterChange(i, $event, 'value', false)" />
+                                </td>
+                                <td>
+                                    {{param.type}}
+                                </td>
+                                <td>
+                                    {{param.group}}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                </div>
+                }
+            </div>
+        </div>
+    </form>
+</div>
+<div mat-dialog-actions>
+</div>

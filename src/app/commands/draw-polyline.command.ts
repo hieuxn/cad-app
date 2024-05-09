@@ -2,7 +2,7 @@ import { Injector } from "@angular/core";
 import { Group, Object3D, Vector3 } from "three";
 import { AngleSnappingUtils } from "../utils/angle-snapping.utils";
 import { LengthAngleIndicatorUtils } from "../utils/dimension-indicator.utils";
-import { PolylineData } from "../utils/three-object-creation/creators/polyline.creator";
+import { InstanceParameters, PolylineData } from "../utils/three-object-creation/creators/polyline.creator";
 import { ContextMenuCommandBase, ContextMenuGenericCommand } from "./context-menu.command";
 import { CommandActionBase, MousePlacementCommand } from "./mouse-placement.command";
 
@@ -36,7 +36,7 @@ export class DrawPolyLineCommand extends MousePlacementCommand {
     super.execute();
     this._forceFinish = false;
 
-    this._userData = new PolylineData([], this.color);
+    this._userData = new PolylineData(new InstanceParameters([], this.color));
     this._polyline = this.objectCreatorService.polyline.create(this._userData);
 
     this.addToScene(this._polyline);
@@ -44,7 +44,7 @@ export class DrawPolyLineCommand extends MousePlacementCommand {
 
   protected override isFinished(mouseLocations: Vector3[]): boolean {
     super.isFinished(mouseLocations);
-    
+
     if (!this._forceFinish) {
       const isPolylineClosed = mouseLocations.length >= 2 && mouseLocations[mouseLocations.length - 1].distanceToSquared(mouseLocations[0]) < 1E-2;
       if (isPolylineClosed) {
@@ -53,7 +53,7 @@ export class DrawPolyLineCommand extends MousePlacementCommand {
         this._forceFinish = true;
       }
     }
-    
+
     if (this._forceFinish) {
       this.objectCreatorService.polyline.fixPosition(this._polyline);
       this._forceFinish = true;
@@ -88,8 +88,9 @@ export class DrawPolyLineCommand extends MousePlacementCommand {
   }
 
   protected override onCommandExecute(mouseLocations: Vector3[]): Object3D | null {
-    this._userData.points = mouseLocations;
-    this._userData.color = this.color;
+    console.log(mouseLocations.at(-1));
+    this._userData.instance.points = mouseLocations;
+    this._userData.instance.color = this.color;
     this.objectCreatorService.polyline.updatePoints(this._polyline);
 
     if (mouseLocations.length > 1) {

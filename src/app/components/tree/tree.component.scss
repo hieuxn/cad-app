@@ -1,49 +1,43 @@
+@import '../../../mixins';
+
+@mixin padding-left() {
+  padding-left: 20px;
+}
+
+.div {
+  @include horizontal();
+  @include padding-left();
+  @include default-color();
+}
+
+i {
+  @include default-icon-props();
+}
+
+img {
+  margin: 8px;
+  width: 32px;
+  height: 32px;
+}
+
 .mat-tree-invisible {
   display: none;
 }
 
-.mat-tree {
-  background-color: #333;
-  color: white;
+.mat-tree,
+.mat-tree button {
+  @include default-color();
 }
 
-.mat-tree span {
-  padding-left: 20px;
-  background-color: #333;
-  color: white;
-}
-
-.mat-tree button,
-i {
-  background-color: #333;
-  color: white;
-}
-
-.mat-tree ul,
-.mat-tree li {
-  margin-top: 0;
-  margin-bottom: 0;
-  list-style-type: none;
-  background-color: #333;
-  color: white;
-}
-
-/*
- * This padding sets alignment of the nested nodes.
- */
 .mat-tree .mat-nested-tree-node div[role=group] {
-  padding-left: 20px;
-  background-color: #333;
-  color: white;
+  @include padding-left();
+  @include default-color();
 }
 
-/*
- * Padding for leaf nodes.
- * Leaf nodes need to have padding so as to align with other non-leaf nodes
- * under the same parent.
- */
+mat-tree-node,
 .mat-tree div[role=group]>.mat-tree-node {
-  padding-left: 20px;
-  background-color: #333;
-  color: white;
+  @include show-hover();
+  @include padding-left();
+  @include default-color();
+  @include set-common-height();
 }

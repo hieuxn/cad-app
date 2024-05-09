@@ -14,23 +14,44 @@ import { MainView3DService } from '../../services/main-view-3d.service';
 import { ObjectControlService } from '../../services/object-control.service';
 import { ObjectCreationService } from '../../services/object-creation.service';
 import { ObjectSelectionService } from '../../services/object-selection.service';
-import { Node, Tree } from '../tree/tree.component';
+import { SymbolDefinitionService } from '../../services/symbols.service';
+import { UserData } from '../../utils/three-object-creation/creators/polyline.creator';
+import { Tree, TreeNode } from '../tree/tree.component';
 
 enum Action {
 
   File = 'Choose File',
   Export = 'Export File',
   Save = 'Save Scene',
-  Clear = 'Clear Scene'
+  Clear = 'Clear Scene',
+  ImportSymbol = 'Import Symbol Definition'
 }
-const TREE_DATA: Node[] = [
-  { name: Action.File as string },
+const TREE_DATA: TreeNode[] = [
+  {
+    name: Action.File as string,
+    iconClass: "fa-regular fa-folder-open"
+  },
   {
     name: Action.Export as string,
-    children: [{ name: 'JSON' }, { name: 'DXF' }, { name: 'GLB' }, { name: 'GLTF' }],
+    iconClass: "fa-solid fa-file-arrow-down",
+    children: [
+      { name: 'JSON', iconClass: "fa-regular fa-file" },
+      { name: 'DXF', iconClass: "fa-regular fa-file" },
+      { name: 'GLB', iconClass: "fa-regular fa-file" },
+      { name: 'GLTF', iconClass: "fa-regular fa-file" }],
   },
-  { name: Action.Save as string },
-  { name: Action.Clear as string }
+  {
+    name: Action.Save as string,
+    iconClass: "fa-regular fa-floppy-disk",
+  },
+  {
+    name: Action.Clear as string,
+    iconClass: "fa-solid fa-broom",
+  },
+  {
+    name: Action.ImportSymbol as string,
+    iconClass: "fa-solid fa-upload",
+  }
 ];
 
 @Component({
@@ -50,9 +71,11 @@ export class FileManagementComponent {
   private _objectCreator: ObjectCreationService;
   private _selectionService: ObjectSelectionService;
   private _objectControlService: ObjectControlService;
+  private _symbolService: SymbolDefinitionService;
   selectedExtension: supportedExtensions = 'json';
-  data: Node[] = TREE_DATA;
+  data: TreeNode[] = TREE_DATA;
   @ViewChild('fileInput') myInputRef!: ElementRef;
+  @ViewChild('fileSymbol') fileSymbolRef!: ElementRef;
 
   constructor(injector: Injector) {
     this._converterService = injector.get(FileConveterService);
@@ -63,9 +86,10 @@ export class FileManagementComponent {
     this._objectCreator = injector.get(ObjectCreationService);
     this._selectionService = injector.get(ObjectSelectionService);
     this._objectControlService = injector.get(ObjectControlService);
+    this._symbolService = injector.get(SymbolDefinitionService);
   }
 
-  async nodeClickedHanlder(node: Node) {
+  async nodeClickedHanlder(node: TreeNode) {
     console.log(node.name);
     switch (node.name as Action) {
       case Action.File:
@@ -77,10 +101,55 @@ export class FileManagementComponent {
       case Action.Clear:
         await this.clear();
         break;
+      case Action.ImportSymbol:
+        this.fileSymbolRef.nativeElement.click();
+        break;
       default:
         await this.export(node.name);
         break;
     }
+  }
+
+  async importJson(event: Event) {
+    function normalizeKeys(obj: any): any {
+      if (Array.isArray(obj)) {
+        return obj.map(normalizeKeys);
+      } else if (obj !== null && obj.constructor === Object) {
+        return Object.keys(obj).reduce((acc, key) => {
+          const normalizedKey = key.charAt(0).toLowerCase() + key.slice(1);
+          acc[normalizedKey] = normalizeKeys(obj[key]);
+          return acc;
+        }, {} as any);
+      }
+      return obj;
+    }
+
+    const fileList = (event.target as HTMLInputElement)?.files as FileList;
+    if (!fileList) return;
+    const promise = new Promise<UserData>((resolve, reject) => {
+      const reader = new FileReader();
+
+      reader.onload = (event) => {
+        try {
+          const json = event.target?.result;
+          const parsed = JSON.parse(json as string);
+          const normalized = normalizeKeys(parsed) as UserData;
+          resolve(normalized);
+        } catch (error) {
+          reject(error);
+        }
+      };
+
+      reader.onerror = (error) => {
+        reject(error);
+      };
+
+      reader.readAsText(fileList[0]);
+    });
+    const newSymbol = await promise;
+    const uniqueName = this._symbolService.getUniqueName(newSymbol);
+    if (this._symbolService.findByName(uniqueName)) return;
+    this._symbolService.symbols.push(newSymbol);
   }
 
   async handleFileInput(event: Event) {
@@ -134,6 +203,7 @@ export class FileManagementComponent {
 
   async save() {
     try {
+      await this._symbolService.saveData();
       // To revert all selected materials
       this._selectionService.deselectAll(true);
 
@@ -160,6 +230,7 @@ export class FileManagementComponent {
 
   async clear() {
     try {
+      await this._symbolService.clearData();
       await this._indexedDbService.saveData(this._dataId, [])
       this._layerService.layers.forEach(layer => layer.clear());
       console.log('Data saved successfully!');
@@ -191,6 +262,7 @@ export class FileManagementComponent {
       else {
         this._layerService.activeLayer.clear();
       }
+      await this._symbolService.loadData();
     }
     catch (error) {
       console.error('Error loading note:', error);

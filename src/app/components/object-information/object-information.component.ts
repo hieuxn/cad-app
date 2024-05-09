@@ -2,6 +2,7 @@ import { CommonModule, NgIf } from '@angular/common';
 import { AfterViewInit, Component, Injector } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDialog } from '@angular/material/dialog';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
@@ -17,7 +18,9 @@ import { LayerService } from '../../services/layer.service';
 import { ObjectCreationService } from '../../services/object-creation.service';
 import { ObjectSelectionService } from '../../services/object-selection.service';
 import { SidebarService } from '../../services/sidebar.service';
+import { UserData } from '../../utils/three-object-creation/creators/polyline.creator';
 import { ThreeUtils } from '../../utils/three.utils';
+import { UserDataEditorComponent } from '../user-data-editor/user-data-editor.component';
 
 export interface ObjectData {
   id: number;
@@ -46,6 +49,8 @@ export class ObjectInformationComponent implements AfterViewInit {
   private _layerService: LayerService;
   private _commandService: CommandManagerService;
   private _snackBar: MatSnackBar;
+  private _userData: UserData | null = null;
+  private _obj: Object3D | null = null;
   newKey = '';
   newValue = '';
 
@@ -53,7 +58,7 @@ export class ObjectInformationComponent implements AfterViewInit {
     return this.tableForm.get('rows') as FormArray;
   }
 
-  constructor(private injector: Injector) {
+  constructor(private injector: Injector, public dialog: MatDialog) {
     this._sidebarService = injector.get(SidebarService);
     this._formBuilder = injector.get(FormBuilder);
     this._snackBar = injector.get(MatSnackBar);
@@ -65,6 +70,15 @@ export class ObjectInformationComponent implements AfterViewInit {
     this.tableForm = this._formBuilder.group({ rows: this._formBuilder.array([]) });
   }
 
+  openDialog(): void {
+    const dialogRef = this.dialog.open(UserDataEditorComponent, { data: { object: this._obj } });
+    const sub = dialogRef.afterClosed().subscribe(result => {
+      this.rows.clear();
+      this._userData = null;
+      this._selectionService.deselectAll(true);
+    });
+  }
+
   ngAfterViewInit(): void {
     const sub = this._selectionService.selectedObjects$.subscribe(item => {
       if (item.change === 'add') {
@@ -72,13 +86,16 @@ export class ObjectInformationComponent implements AfterViewInit {
         this._buildForm(item.changedItem);
         if (this.rows.length > 0) this._sidebarService.selectTab('info', true);
       }
-      else this.rows.clear();
+      else {
+        this.rows.clear();
+        this._userData = null;
+      }
     });
   }
 
   private _buildForm(object: Object3D): void {
-    const obj = this._threeUtils.getParentGroup(object);
-    const data = Object.entries(obj?.userData ?? {})
+    const obj = this._obj = this._threeUtils.getParentGroup(object);
+    const data = Object.entries(this._userData = obj?.userData as UserData ?? {})
     let index = 1;
     data.forEach(row => {
       if (this.isVector(row[1])) {
@@ -93,6 +110,22 @@ export class ObjectInformationComponent implements AfterViewInit {
         );
       }
       else {
+        if (row[0] === "parameters") {
+          const arr = row[1] as any[];
+          (arr).forEach((para: any) => {
+            this.rows.push(
+              this._formBuilder.group({
+                id: [index++],
+                name: [para.name],
+                type: typeof para.value,
+                value: [row[0] === 'color' ? this._toColorFormat(para.value) : para.value],
+                object: obj,
+              })
+            );
+          })
+          return;
+        }
+        if (typeof row[1] === 'object') return;
         this.rows.push(
           this._formBuilder.group({
             id: [index++],
@@ -133,7 +166,7 @@ export class ObjectInformationComponent implements AfterViewInit {
     this.newKey = '';
     this.newValue = '';
 
-    this._commandService.addCommand(new CommandActionBase(`Add property ${key}`,() => {
+    this._commandService.addCommand(new CommandActionBase(`Add property ${key}`, () => {
       obj.userData = { ...obj.userData, [key]: parseFloat(this.newValue) || this.newValue };
 
       this.tableForm = this._formBuilder.group({ rows: this._formBuilder.array([]) });
@@ -151,13 +184,13 @@ export class ObjectInformationComponent implements AfterViewInit {
     const key = element.get('name')?.value;
     if (!obj || !key) return;
     delete obj.userData[key]
-    
+
     this.tableForm = this._formBuilder.group({ rows: this._formBuilder.array([]) });
     this._buildForm(obj);
 
-    this._commandService.addCommand(new CommandActionBase(`Remove property ${key}`,() => {
+    this._commandService.addCommand(new CommandActionBase(`Remove property ${key}`, () => {
       delete obj.userData[key];
-      
+
       this.tableForm = this._formBuilder.group({ rows: this._formBuilder.array([]) });
       this._buildForm(obj);
     }, () => {

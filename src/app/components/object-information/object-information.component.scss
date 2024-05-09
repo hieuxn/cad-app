@@ -1,8 +1,14 @@
+@import '../../../mixins';
+
 .scrollable-container {
   max-height: 95vh;
   overflow-y: auto;
   display: block;
   width: 100%;
+
+  button {
+    color: white;
+  }
 }
 
 .custom-mat-table {

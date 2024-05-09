@@ -35,7 +35,7 @@ export class JsonConverter extends BaseConverter {
 
   override serialize(objects: Object3D<Object3DEventMap>[]): Promise<File> {
     const jsonObjects = objects.map(o => o.toJSON());
-    const jsonString = JSON.stringify(jsonObjects);
+    const jsonString = JSON.stringify({ familySymbols: [], threeObjects: jsonObjects });
 
     const blob = new Blob([jsonString], { type: 'application/json' });
     const file = new File([blob], 'objects.json', { type: 'application/json' });

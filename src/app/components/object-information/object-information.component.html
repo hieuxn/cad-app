@@ -65,9 +65,9 @@
             <div (dblclick)="startEdit(i, element.get('value').value)">
               {{element.get('value').value}}
             </div>
-            <button mat-icon-button (click)="removeRow(element)">
+            <!-- <button mat-icon-button (click)="removeRow(element)">
               <i class="fa-solid fa-minus"></i>
-            </button>
+            </button> -->
           </div>
           }
           }
@@ -79,11 +79,12 @@
       <tr mat-row *matRowDef="let row; columns: ['name', 'value'];"></tr>
     </table>
   </form>
-  <div *ngIf="rows.length" class="row-form">
+  <!-- <div *ngIf="rows.length" class="row-form">
     <input type="text" placeholder="Key" [(ngModel)]="newKey">
     <input type="text" placeholder="Value" [(ngModel)]="newValue">
     <button mat-icon-button (click)="addRow()">
       <i class="fa-solid fa-plus"></i>
     </button>
-  </div>
+  </div> -->
+  <button mat-button (click)="openDialog()">Edit User Data</button>
 </div>
